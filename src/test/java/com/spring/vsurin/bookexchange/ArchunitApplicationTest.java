@@ -20,7 +20,7 @@ public class ArchunitApplicationTest {
         ArchRule rule = Architectures.layeredArchitecture()
                 .layer("domain").definedBy("..domain..")
                 .layer("app").definedBy("..app..")
-                .layer("extern").definedBy("..api..", "..repository..")
+                .layer("extern").definedBy("..api..", "..infrastructure..", "..repository..")
                 .whereLayer("app").mayOnlyBeAccessedByLayers("app", "extern")
                 .whereLayer("extern").mayOnlyBeAccessedByLayers("extern");
 
