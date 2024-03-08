@@ -7,30 +7,18 @@ spring:
 
 ---
 spring:
-  profiles: dev
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/mydatabase_dev
-    username: dev_username
-    password: dev_password
-    driver-class-name: org.postgresql.Driver
+  config:
+    activate:
+      on-profile: "dev"
 
 ---
 spring:
-  profiles: test
-
-  datasource:
-    url: jdbc:postgresql://localhost:5432/mydatabase_test
-    username: test_username
-    password: test_password
-    driver-class-name: org.postgresql.Driver
+  config:
+    activate:
+      on-profile: "test"
 
 ---
 spring:
-  profiles: prod
-
-  datasource:
-    url: jdbc:postgresql://prod_server:5432/mydatabase_prod
-    username: prod_username
-    password: prod_password
-    driver-class-name: org.postgresql.Driver
+  config:
+    activate:
+      on-profile: "prod"

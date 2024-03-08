@@ -23,7 +23,6 @@ public class ArchunitApplicationTest {
                 .layer("extern").definedBy("..api..", "..infrastructure..", "..repository..")
                 .whereLayer("app").mayOnlyBeAccessedByLayers("app", "extern")
                 .whereLayer("extern").mayOnlyBeAccessedByLayers("extern");
-
         rule.check(classes);
     }
 
