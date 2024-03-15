@@ -1,12 +1,10 @@
 package com.spring.vsurin.bookexchange.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 import org.hibernate.validator.constraints.Range;
 
+import java.time.Year;
 import java.util.List;
 
 /**
@@ -18,6 +16,7 @@ import java.util.List;
 @Table(name = "books")
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class Book {
     /**
      * Уникальный идентификатор книги в базе.
@@ -26,12 +25,13 @@ public class Book {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "book_id")
     @Getter
+    @EqualsAndHashCode.Include
     private long id;
 
     /**
      * Пользователи, у которых такая книга сейчас в библиотеке.
      */
-    @ManyToMany(mappedBy = "ownedBooks")
+    @ManyToMany(mappedBy = "library", fetch = FetchType.EAGER)
     @Getter
     private List<User> owners;
 
@@ -41,6 +41,7 @@ public class Book {
     @Column(name = "book_title")
     @Getter
     @Setter
+    @EqualsAndHashCode.Include
     private String title;
 
     /**
@@ -49,15 +50,17 @@ public class Book {
     @Column(name = "book_author")
     @Getter
     @Setter
+    @EqualsAndHashCode.Include
     private String author;
 
     /**
      * Год издания.
      */
-    @Column(name = "book_publicationYear")
+    @Column(name = "book_year")
     @Getter
     @Setter
-    private int publicationYear;
+    @EqualsAndHashCode.Include
+    private Year publicationYear;
 
     /**
      * Код ISBN.
@@ -65,6 +68,7 @@ public class Book {
     @Column(name = "book_isbn")
     @Getter
     @Setter
+    @EqualsAndHashCode.Include
     private String isbn;
 
     /**
@@ -74,6 +78,7 @@ public class Book {
     @Column(name = "book_genre")
     @Getter
     @Setter
+    @EqualsAndHashCode.Include
     private BookGenre genre;
 
     /**
@@ -82,22 +87,40 @@ public class Book {
     @Column(name = "book_description")
     @Getter
     @Setter
+    @EqualsAndHashCode.Include
     private String description;
 
     /**
      * Пользователи, предлагающие книгу для обмена в данный момент.
      */
-    @ManyToMany(mappedBy = "offeredBooks")
+    @ManyToMany(mappedBy = "offeredBooks", fetch = FetchType.EAGER)
     @Getter
     private List<User> usersOfferingForExchange;
 
     /**
      * Рейтинг книги.
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "book_marks", joinColumns = @JoinColumn(name = "book_id"))
     @Getter
-    @Setter
-    @Range(min = 1, max = 10)
+    //@Range(min = 1, max = 10)
     private List<Integer> marks;
+
+    /**
+     * Вычисляет рейтинг книги.
+     *
+     * @return рейтинг книги или 0, если книга не найдена или у неё нет оценок
+     */
+    public double calculateBookRating() {
+        double result = 0;
+            if (marks.isEmpty()) {
+                return 0;
+            }
+            double sum = 0;
+            for (int mark : marks) {
+                sum += mark;
+            }
+            result = sum / marks.size();
+        return result;
+    }
 }

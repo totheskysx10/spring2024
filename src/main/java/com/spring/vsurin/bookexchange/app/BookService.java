@@ -3,7 +3,8 @@ package com.spring.vsurin.bookexchange.app;
 import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.BookGenre;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.stereotype.Component;
 
 import java.util.List;
@@ -17,25 +18,34 @@ public class BookService {
 
     private final BookRepository bookRepository;
 
-    @Autowired
+
     public BookService(BookRepository bookRepository) {
         this.bookRepository = bookRepository;
     }
 
     /**
-     * Создает новую книгу и сохраняет его в базе данных, проверяя, нет ли ещё такой книги.
+     * Создает новую книгу и, если не null, сохраняет её в базе данных, проверяя, нет ли ещё такой книги.
      * @param book объект книги для создания
      * @return сохраненная книга
      */
     public Book createBook(Book book) {
-        List<Book> existingBooks = bookRepository.findByTitleAndAuthorIgnoreCase(book.getTitle(), book.getAuthor());
-        if (!existingBooks.isEmpty()) {
-            log.warn("Книга с названием {} и автором {} уже есть в базе, добавление не выполнено", book.getTitle(), book.getAuthor());
-            return null;
+        if (book != null) {
+            try {
+                List<Book> existingBooks = bookRepository.findByTitleAndAuthorIgnoreCase(book.getTitle(), book.getAuthor());
+                if (!existingBooks.isEmpty()) {
+                    log.warn("Книга с названием {} и автором {} уже есть в базе, добавление не выполнено", book.getTitle(), book.getAuthor());
+                    return book;
+                }
+                bookRepository.save(book);
+                log.info("Создана книга с id {}", book.getId());
+                return book;
+            } catch (Exception e) {
+                log.error("Ошибка при создании книги: {}", e.getMessage());
+                throw new RuntimeException("Ошибка при создании книги", e);
+            }
+        } else {
+            throw new IllegalArgumentException("Книга не может быть null");
         }
-        bookRepository.save(book);
-        log.info("Создана книга с id {}", book.getId());
-        return book;
     }
 
     /**
@@ -45,32 +55,34 @@ public class BookService {
      */
     public Book getBookById(long bookId) {
         Book foundBook = bookRepository.findById(bookId);
-        if (foundBook == null)
+        if (foundBook == null) {
             log.error("Не найдена книга с id {}", bookId);
+            throw new IllegalArgumentException("Книга с id " + bookId + " не найдена");
+        }
         else {
             log.info("Найдена книга с id {}", bookId);
             return foundBook;
         }
-        return null;
     }
 
     /**
-     * Возвращает все книги, которые есть в базе.
-     * @return все книги
+     * Возвращает все книги, которые есть в базе, с пагинацией.
+     * @return все книги, по страницам
      */
-    public List<Book> getAllBooksInBase() {
-        List<Book> AllBooks = bookRepository.findAll();
-        return AllBooks;
+    public Page<Book> getAllBooksInBase(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        return bookRepository.findAll(pageable);
     }
 
     /**
-     * Ищет книги по указанному жанру.
+     * Ищет книги по указанному жанру, с пагинацией.
      *
      * @param genre жанр книги, по которому нужно выполнить поиск
-     * @return список книг, соответствующих указанному жанру
+     * @return список книг, соответствующих указанному жанру, по страницам
      */
-    public List<Book> searchByGenre(BookGenre genre) {
-        return bookRepository.findByGenreIgnoreCase(genre);
+    public Page<Book> searchByGenre(BookGenre genre, int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        return bookRepository.findByGenre(genre, pageable);
     }
 
     /**
@@ -89,9 +101,9 @@ public class BookService {
      *
      * @return Список книг, доступных для обмена.
      */
-    public List<Book> getAvailableForExchanheBooks() {
-        List<Book> availableForExchangeBooks = bookRepository.findBooksWithUsersOfferingForExchange();
-        return availableForExchangeBooks;
+    public Page<Book> getAvailableForExchangeBooks(int page, int size) {
+        PageRequest pageable = PageRequest.of(page, size);
+        return bookRepository.findBooksWithUsersOfferingForExchange(pageable);
     }
 
     /**
@@ -103,35 +115,24 @@ public class BookService {
     public void addMarkToBook(long bookId, int mark) {
         Book book = getBookById(bookId);
         if (book != null) {
-                List<Integer> marks = book.getMarks();
-                marks.add(mark);
-                book.setMarks(marks);
+                book.getMarks().add(mark);
                 bookRepository.save(book);
                 log.info("Оценка {} добавлена в список оценок книги с id {}", mark, bookId);
         }
     }
 
     /**
-     * Вычисляет рейтинг книги с указанным идентификатором.
-     * Если книга с таким идентификатором не найдена или у неё нет оценок, возвращает 0.
+     * Добавляет описание книге с указанным идентификатором.
      *
      * @param bookId идентификатор книги
-     * @return рейтинг книги или 0, если книга не найдена или у неё нет оценок
+     * @param desc   описание, которое нужно добавить
      */
-    public double calculateBookRating(long bookId) {
-        double result = 0;
+    public void updateDescriptionToBook(long bookId, String desc) {
         Book book = getBookById(bookId);
         if (book != null) {
-            List<Integer> marks = book.getMarks();
-            if (marks.isEmpty()) {
-                return 0;
-            }
-            double sum = 0;
-            for (int mark : marks) {
-                sum += mark;
-            }
-            result = sum / marks.size();
+            book.setDescription(desc);
+            bookRepository.save(book);
+            log.info("Описание добавлено для книги с id {}", bookId);
         }
-        return result;
     }
 }

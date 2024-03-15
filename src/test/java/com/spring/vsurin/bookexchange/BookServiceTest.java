@@ -1,19 +1,21 @@
-/*package com.spring.vsurin.bookexchange;
+package com.spring.vsurin.bookexchange;
 
 import com.spring.vsurin.bookexchange.app.BookService;
 import com.spring.vsurin.bookexchange.app.UserService;
 import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.BookGenre;
-import com.spring.vsurin.bookexchange.domain.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.data.domain.Page;
+import org.springframework.test.context.jdbc.Sql;
 
-import java.util.ArrayList;
+
+import java.time.Year;
 import java.util.List;
 
-import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertNotNull;
+import static org.junit.jupiter.api.Assertions.*;
+
 
 @SpringBootTest
 public class BookServiceTest {
@@ -29,162 +31,89 @@ public class BookServiceTest {
         Book book = new Book();
         book.setTitle("testBook");
         book.setAuthor("testBookAuthor");
+        book.setDescription("123desc");
+        book.setGenre(BookGenre.FICTION);
+        book.setIsbn("123");
+        book.setPublicationYear(Year.of(2005));
         Book savedBook = bookService.createBook(book);
         assertNotNull(savedBook.getId());
     }
 
+    @Sql("/no_exchanges.sql")
     @Test
     public void testGetBookById() {
-        Book book = new Book();
-        book.setTitle("testBook");
-        book.setAuthor("testBookAuthor");
-        Book savedBook = bookService.createBook(book);
-        long bookId = savedBook.getId();
-        Book retrievedBook = bookService.getBookById(bookId);
+        Book retrievedBook = bookService.getBookById(1);
         assertNotNull(retrievedBook);
-        assertEquals(bookId, retrievedBook.getId());
+        assertEquals(1, retrievedBook.getId());
     }
 
+    @Sql("/no_exchanges.sql")
+    @Test
+    public void testGetBookByIdNull() {
+        assertThrows(IllegalArgumentException.class, () -> {
+            bookService.getBookById(4);
+        });
+    }
+    @Sql("/no_exchanges.sql")
     @Test
     public void testGetAllBooksInBase() {
-        Book book1 = new Book();
-        book1.setTitle("testBook");
-        book1.setAuthor("testBookAuthor");
-        Book savedBook1 = bookService.createBook(book1);
-
-        Book book2 = new Book();
-        book2.setTitle("testBook2");
-        book2.setAuthor("testBookAuthor2");
-        Book savedBook2 = bookService.createBook(book2);
-
-        List<Book> result = new ArrayList<>();
-        result.add(book1);
-        result.add(book2);
-        assertEquals(result, bookService.getAllBooksInBase());
+        Page<Book> booksPage = bookService.getAllBooksInBase(0, 10);
+        List<Book> books = booksPage.getContent();
+        assertEquals(3, books.size());
     }
 
+    @Sql("/no_exchanges.sql")
     @Test
     public void testSearchByGenre() {
-        Book book1 = new Book();
-        book1.setTitle("testBook");
-        book1.setAuthor("testBookAuthor");
-        book1.setGenre(BookGenre.ADVENTURE);
-        Book savedBook1 = bookService.createBook(book1);
+        Page<Book> booksPage = bookService.searchByGenre(BookGenre.FICTION, 0, 10); // Получить первые 10 книг жанра "Фантастика"
+        List<Book> books = booksPage.getContent();
 
-        Book book2 = new Book();
-        book2.setTitle("testBook2");
-        book2.setAuthor("testBookAuthor2");
-        book2.setGenre(BookGenre.FICTION);
-        Book savedBook2 = bookService.createBook(book2);
-
-        Book book3 = new Book();
-        book3.setTitle("testBook3");
-        book3.setAuthor("testBookAuthor3");
-        book1.setGenre(BookGenre.ART);
-        Book savedBook3 = bookService.createBook(book3);
-
-        BookGenre genreToSearch = BookGenre.FICTION;
-        List<Book> foundBooks = bookService.searchByGenre(genreToSearch);
-        List<Book> expectedBooks = new ArrayList<>();
-        expectedBooks.add(book2);
-
-        assertEquals(expectedBooks, foundBooks);
+        assertEquals(1, books.size());
     }
 
+    @Sql("/no_exchanges.sql")
     @Test
     public void testSearchByTitleOrAuthor() {
-        Book book1 = new Book();
-        book1.setTitle("testBook");
-        book1.setAuthor("testBookAuthor");
-        book1.setGenre(BookGenre.ADVENTURE);
-        Book savedBook1 = bookService.createBook(book1);
-
-        Book book2 = new Book();
-        book2.setTitle("testBook2");
-        book2.setAuthor("testBookAuthor2");
-        book2.setGenre(BookGenre.FICTION);
-        Book savedBook2 = bookService.createBook(book2);
-
-        Book book3 = new Book();
-        book3.setTitle("testBook3");
-        book3.setAuthor("testBookAuthor3");
-        book1.setGenre(BookGenre.ART);
-        Book savedBook3 = bookService.createBook(book3);
-
-        String searchRequest = "testBook2";
+        String searchRequest = "Test Bo";
         List<Book> foundBooks = bookService.searchByTitleOrAuthor(searchRequest);
-        List<Book> expectedBooks = new ArrayList<>();
-        expectedBooks.add(book2);
 
-        assertEquals(expectedBooks, foundBooks);
+        assertEquals(3, foundBooks.size());
     }
 
+    @Sql("/no_exchanges.sql")
     @Test
-    public void testGetAvailableForExchanheBooks() {
-        Book book1 = new Book();
-        book1.setTitle("testBook");
-        book1.setAuthor("testBookAuthor");
-        book1.setGenre(BookGenre.ADVENTURE);
-        Book savedBook1 = bookService.createBook(book1);
+    public void testGetAvailableForExchangeBooks() {
+        userService.addBookToUserLibrary(1, 1);
+        userService.addBookToUserLibrary(2, 1);
+        userService.addBookToUserLibrary(2, 2);
 
-        Book book2 = new Book();
-        book2.setTitle("testBook2");
-        book2.setAuthor("testBookAuthor2");
-        book2.setGenre(BookGenre.FICTION);
-        Book savedBook2 = bookService.createBook(book2);
+        userService.addBookToOfferedByUser(1, 1);
+        userService.addBookToOfferedByUser(2, 1);
 
-        User user1 = new User();
-        user1.setUsername("testUser");
-        user1.setEmail("test@example.com");
+        Page<Book> booksPage = bookService.getAvailableForExchangeBooks(0, 10);
+        List<Book> books = booksPage.getContent();
 
-        User user2 = new User();
-        user2.setUsername("testUser2");
-        user2.setEmail("test2@example.com");
-
-        userService.addBookToUserLibrary(user1.getId(), book1.getId());
-        userService.addBookToUserLibrary(user1.getId(), book2.getId());
-        userService.addBookToUserLibrary(user2.getId(), book1.getId());
-
-        userService.addBookToOfferedByUser(user1.getId(), book1.getId());
-        userService.addBookToOfferedByUser(user2.getId(), book1.getId());
-
-        List<Book> expectedBooks = new ArrayList<>();
-        expectedBooks.add(book1);
-
-        assertEquals(expectedBooks, bookService.getAvailableForExchanheBooks());
+        assertEquals(1, books.size());
     }
 
+    @Sql("/no_exchanges.sql")
     @Test
     public void testAddMarkToBook() {
-        Book book1 = new Book();
-        book1.setTitle("testBook");
-        book1.setAuthor("testBookAuthor");
-        book1.setGenre(BookGenre.ADVENTURE);
-        Book savedBook1 = bookService.createBook(book1);
+        bookService.addMarkToBook(1, 5);
+        bookService.addMarkToBook(1, 7);
 
-        bookService.addMarkToBook(book1.getId(), 5);
-        bookService.addMarkToBook(book1.getId(), 7);
+        Book updatedBook = bookService.getBookById(1);
 
-        List<Integer> expectedMarks = new ArrayList<>();
-        expectedMarks.add(5);
-        expectedMarks.add(7);
-
-        assertEquals(expectedMarks, book1.getMarks());
+        assertEquals(2, updatedBook.getMarks().size());
     }
 
+    @Sql("/no_exchanges.sql")
     @Test
-    public void testCalculateBookRating() {
-        Book book1 = new Book();
-        book1.setTitle("testBook");
-        book1.setAuthor("testBookAuthor");
-        book1.setGenre(BookGenre.ADVENTURE);
-        Book savedBook1 = bookService.createBook(book1);
+    public void testUpdateDescriptionToBook() {
+        bookService.updateDescriptionToBook(1, "DEEEESC");
 
-        bookService.addMarkToBook(book1.getId(), 5);
-        bookService.addMarkToBook(book1.getId(), 7);
+        Book updatedBook = bookService.getBookById(1);
 
-        int expectedResult = 6;
-
-        assertEquals(expectedResult, bookService.calculateBookRating(book1.getId()));
+        assertEquals("DEEEESC", updatedBook.getDescription());
     }
-}*/
+}

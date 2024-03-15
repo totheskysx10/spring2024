@@ -1,10 +1,7 @@
 package com.spring.vsurin.bookexchange.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.util.List;
 
@@ -17,6 +14,7 @@ import java.util.List;
 @Table(name = "users")
 @AllArgsConstructor
 @NoArgsConstructor
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class User {
     /**
      * Уникальный идентификатор пользователя в базе.
@@ -25,6 +23,7 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "user_id")
     @Getter
+    @EqualsAndHashCode.Include
     private long id;
 
     /**
@@ -46,7 +45,7 @@ public class User {
     /**
      * Библиотека пользователя (книги, которые у него есть).
      */
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_books",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -58,7 +57,7 @@ public class User {
     /**
      * Книги, которые пользователь готов обменять.
      */
-    @ManyToMany
+    @ManyToMany(fetch = FetchType.EAGER)
     @JoinTable(
             name = "user_offered_books",
             joinColumns = @JoinColumn(name = "user_id"),
@@ -70,10 +69,9 @@ public class User {
     /**
      * Список адресов проживания пользователя, куда можно доставлять книги при обмене.
      */
-    @ElementCollection
+    @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_addresses", joinColumns = @JoinColumn(name = "user_id"))
     @Getter
-    @Setter
     private List<String> addressList;
 
     /**
@@ -83,4 +81,27 @@ public class User {
     @Getter
     @Setter
     private String phoneNumber;
+
+    /**
+     * Список обменов пользователя, как member 1.
+     */
+    @OneToMany(mappedBy = "member1", fetch = FetchType.EAGER)
+    @Getter
+    private List<Exchange> exchangesAsMember1;
+
+    /**
+     * Список обменов пользователя, как member 2.
+     */
+    @OneToMany(mappedBy = "member2", fetch = FetchType.EAGER)
+    @Getter
+    private List<Exchange> exchangesAsMember2;
+
+    /**
+     * Основной адрес доставки пользователя, используемый в данный момент.
+     */
+    @Column(name = "main_address")
+    @Getter
+    @Setter
+    @NonNull
+    private String mainAddress;
 }

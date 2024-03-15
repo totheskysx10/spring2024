@@ -1,11 +1,14 @@
 package com.spring.vsurin.bookexchange.app;
 
 import com.spring.vsurin.bookexchange.domain.Book;
+import com.spring.vsurin.bookexchange.domain.Exchange;
+import com.spring.vsurin.bookexchange.domain.ExchangeStatus;
 import com.spring.vsurin.bookexchange.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.util.ArrayList;
 import java.util.List;
 
 /**
@@ -17,22 +20,32 @@ public class UserService {
     private final UserRepository userRepository;
     private final BookService bookService;
 
-    @Autowired
+
     public UserService(UserRepository userRepository, BookService bookService) {
         this.userRepository = userRepository;
         this.bookService = bookService;
     }
 
     /**
-     * Создает нового пользователя и сохраняет его в базе данных.
+     * Создает нового пользователя и, если это не null, сохраняет его в базе данных.
      * @param user объект пользователя для создания
      * @return сохраненный пользователь
      */
     public User createUser(User user) {
-        userRepository.save(user);
-        log.info("Создан пользователь с id {}", user.getId());
-        return user;
+        if (user != null) {
+            try {
+                User savedUser = userRepository.save(user);
+                log.info("Создан пользователь с id {}", savedUser.getId());
+                return savedUser;
+            } catch (Exception e) {
+                log.error("Ошибка при создании пользователя: {}", e.getMessage());
+                throw new RuntimeException("Ошибка при создании пользователя", e);
+            }
+        } else {
+            throw new IllegalArgumentException("Пользователь не может быть null");
+        }
     }
+
 
     /**
      * Получает пользователя по его идентификатору.
@@ -41,13 +54,14 @@ public class UserService {
      */
     public User getUserById(long userId) {
         User foundUser = userRepository.findById(userId);
-        if (foundUser == null)
+        if (foundUser == null) {
             log.error("Не найден пользователь с id {}", userId);
+            throw new IllegalArgumentException("Пользователь с id " + userId + " не найден");
+        }
         else {
             log.info("Найден пользователь с id {}", userId);
             return foundUser;
         }
-        return null;
     }
 
     /**
@@ -69,16 +83,19 @@ public class UserService {
 
         Book book = bookService.getBookById(bookId);
 
-        if (!user.getLibrary().contains(book)) {
-            user.getLibrary().add(book);
-            book.getOwners().add(user);
-            userRepository.save(user);
-            log.info("Книга с id {} добавлена в библиотеку пользователя с id {}", bookId, userId);
+        if (book != null) {
+            if (!user.getLibrary().contains(book)) {
+                user.getLibrary().add(book);
+                userRepository.save(user);
+                log.info("Книга с id {} добавлена в библиотеку пользователя с id {}", bookId, userId);
+            } else
+                log.error("Книги не существует!");
         }
     }
 
     /**
      * Добавляет книгу в библиотеке к тем, которые пользователь готов обменять.
+     * Проверяет, не принимает ли эта книга участие в обмене в данный момент.
      * @param userId идентификатор пользователя
      * @param bookId идентификатор книги для добавления
      */
@@ -87,12 +104,30 @@ public class UserService {
 
         Book book = bookService.getBookById(bookId);
 
-        if (user.getLibrary().contains(book)) {
-            user.getOfferedBooks().add(book);
-            book.getUsersOfferingForExchange().add(user);
-            userRepository.save(user);
-            log.info("Книга с id {} в библиотеке пользователя с id {} доступна для обмена", bookId, userId);
-        }
+        if (book != null) {
+            if (user.getLibrary().contains(book)) {
+                List<Exchange> AllUserExchanges = getAllUserExchanges(userId);
+
+                boolean bookInExchange = false;
+                for (Exchange ex : AllUserExchanges) {
+                    if (ex.getStatus() == ExchangeStatus.CONFIRMED || ex.getStatus() == ExchangeStatus.IN_PROGRESS || ex.getStatus() == ExchangeStatus.PROBLEMS)
+                        if (ex.getExchangedBook1().getId() == bookId || ex.getExchangedBook2().getId() == bookId) {
+                            bookInExchange = true;
+                            break;
+                        }
+                }
+
+                if (!bookInExchange) {
+                    user.getOfferedBooks().add(book);
+                    book.getUsersOfferingForExchange().add(user);
+                    userRepository.save(user);
+                    log.info("Книга с id {} в библиотеке пользователя с id {} доступна для обмена", bookId, userId);
+                } else
+                    log.error("Книга с id {} в библиотеке пользователя с id {} не доступна для обмена! Она принимает участие в другом обмене!", bookId, userId);
+            } else
+                log.error("Книга с id {} в библиотеке пользователя с id {} не доступна для обмена, т.к. отсутствует в библиотеке!", bookId, userId);
+        } else
+            log.error("Книги не существует!");
     }
 
     /**
@@ -107,7 +142,6 @@ public class UserService {
 
         if (user.getLibrary().contains(book)) {
             user.getOfferedBooks().remove(book);
-            book.getUsersOfferingForExchange().remove(user);
             userRepository.save(user);
             log.info("Книга с id {} в библиотеке пользователя с id {} больше не доступна для обмена", bookId, userId);
         }
@@ -121,10 +155,10 @@ public class UserService {
     public void removeBookFromUserLibrary(long userId, long bookId) {
         User user = getUserById(userId);
         Book book = bookService.getBookById(bookId);
+        List<Book> l = user.getLibrary();
 
         if (user.getLibrary().contains(book)) {
             user.getLibrary().remove(book);
-            book.getOwners().remove(user);
             userRepository.save(user);
             log.info("Книга с id {} удалена из библиотеки пользователя с id {}", bookId, userId);
         }
@@ -138,9 +172,7 @@ public class UserService {
     public void addAddressToUser(long userId, String address) {
         User user = getUserById(userId);
         if (user != null) {
-            List<String> addressList = user.getAddressList();
-            addressList.add(address);
-            user.setAddressList(addressList);
+            user.getAddressList().add(address);
             userRepository.save(user);
             log.info("Адрес {} добавлен в список адресов пользователя с id {}", address, userId);
         }
@@ -154,11 +186,11 @@ public class UserService {
     public void removeAddressFromUser(long userId, String address) {
         User user = getUserById(userId);
         if (user != null) {
-            List<String> addressList = user.getAddressList();
-            addressList.remove(address);
-            user.setAddressList(addressList);
-            userRepository.save(user);
-            log.info("Адрес {} удалён из списка адресов пользователя с id {}", address, userId);
+            if (user.getAddressList().contains(address)) {
+                user.getAddressList().remove(address);
+                userRepository.save(user);
+                log.info("Адрес {} удалён из списка адресов пользователя с id {}", address, userId);
+            }
         }
     }
 
@@ -188,5 +220,33 @@ public class UserService {
             userRepository.save(user);
             log.info("Email пользователя с id {} изменён на {}", userId, newMail);
         }
+    }
+
+    /**
+     * Обновляет основной адрес доставки пользователя.
+     * @param userId идентификатор пользователя
+     * @param index новый адрес доставки из списка адресов
+     */
+    public void updateMainAddress(long userId, int index) {
+        User user = getUserById(userId);
+        user.setMainAddress(user.getAddressList().get(index));
+        userRepository.save(user);
+        log.info("Основной адрес доставки пользователя с id {} изменён на {}", userId, user.getAddressList().get(index));
+    }
+
+    /**
+     * Объединяет в один список все обмены пользователя.
+     * @param userId идентификатор пользователя
+     * @returns все обмены пользователя
+     */
+    public List<Exchange> getAllUserExchanges(long userId) {
+        User user = getUserById(userId);
+        List<Exchange> ex1 = user.getExchangesAsMember1();
+        List<Exchange> ex2 = user.getExchangesAsMember2();
+        List<Exchange> combinedList = new ArrayList<>();
+        combinedList.addAll(ex1);
+        combinedList.addAll(ex2);
+
+        return combinedList;
     }
 }
