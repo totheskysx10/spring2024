@@ -34,19 +34,19 @@ public class ExchangeService {
      * @throws IllegalStateException если обмен равен null
      */
     public Exchange createExchange(Exchange exchange) {
-        if (exchange != null) {
-            try {
-                userService.removeBookFromOfferedByUser(exchange.getMember1().getId(), exchange.getExchangedBook1().getId());
-                userService.removeBookFromOfferedByUser(exchange.getMember2().getId(), exchange.getExchangedBook2().getId());
-                exchange.setStatus(ExchangeStatus.CONFIRMED);
-                exchangeRepository.save(exchange);
-                log.info("Создан обмен с id {}", exchange.getId());
-                return exchange;
-            } catch (Exception e) {
-                throw new RuntimeException("Ошибка при создании обмена", e);
-            }
-        } else {
+        if (exchange == null) {
             throw new IllegalArgumentException("Обмен не может быть null");
+        }
+
+        try {
+            userService.removeBookFromOfferedByUser(exchange.getMember1().getId(), exchange.getExchangedBook1().getId());
+            userService.removeBookFromOfferedByUser(exchange.getMember2().getId(), exchange.getExchangedBook2().getId());
+            exchange.setStatus(ExchangeStatus.CONFIRMED);
+            exchangeRepository.save(exchange);
+            log.info("Создан обмен с id {}", exchange.getId());
+            return exchange;
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при создании обмена", e);
         }
     }
 
@@ -205,7 +205,6 @@ public class ExchangeService {
             exchange.setStatus(ExchangeStatus.PROBLEMS);
             log.info("Для обмена {} установлен статус PROBLEMS", exchange.getId());
         } else {
-            log.error("Для обмена {} не удалось установить статус PROBLEMS", exchange.getId());
             throw new IllegalStateException("Не удалось установить статус PROBLEMS для обмена с id: " + exchangeId +
                     ", так как не прошло 30 дней с момента создания обмена.");
         }

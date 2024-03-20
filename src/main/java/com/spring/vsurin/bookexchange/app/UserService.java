@@ -33,19 +33,19 @@ public class UserService {
      * @throws IllegalStateException если пользователь равен null
      */
     public User createUser(User user) {
-        if (user != null) {
-            try {
-                User savedUser = userRepository.save(user);
-                log.info("Создан пользователь с id {}", savedUser.getId());
-                return savedUser;
-            } catch (Exception e) {
-                log.error("Ошибка при создании пользователя: {}", e.getMessage());
-                throw new RuntimeException("Ошибка при создании пользователя", e);
-            }
-        } else {
+        if (user == null) {
             throw new IllegalArgumentException("Пользователь не может быть null");
         }
+
+        try {
+            User savedUser = userRepository.save(user);
+            log.info("Создан пользователь с id {}", savedUser.getId());
+            return savedUser;
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при создании пользователя", e);
+        }
     }
+
 
 
     /**

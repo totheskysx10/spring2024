@@ -12,6 +12,7 @@ import org.springframework.test.context.jdbc.Sql;
 
 import static org.junit.jupiter.api.Assertions.*;
 
+@Sql("/no_exchanges.sql")
 @SpringBootTest
 public class UserServiceTest {
 
@@ -26,6 +27,9 @@ public class UserServiceTest {
 
     @Test
     public void testCreateUser() {
+        userService.deleteUser(1);
+        userService.deleteUser(2);
+        userService.deleteUser(3);
         User user = new User();
         user.setUsername("testUser");
         user.setEmail("test@example.com");
@@ -34,7 +38,6 @@ public class UserServiceTest {
         assertNotNull(savedUser.getId());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testGetUserById() {
         User retrievedUser = userService.getUserById(1);
@@ -42,7 +45,6 @@ public class UserServiceTest {
         assertEquals(1, retrievedUser.getId());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testGetUserByIdNull() {
         assertThrows(IllegalArgumentException.class, () -> {
@@ -50,14 +52,12 @@ public class UserServiceTest {
         });
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testDeleteUser() {
         userService.deleteUser(1);
         assertNull(userService.getUserById(1));
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testAddBookToUser() {
             userService.addBookToUserLibrary(1, 1);
@@ -67,10 +67,9 @@ public class UserServiceTest {
             assertNotNull(updatedUser);
             assertEquals(1, updatedUser.getLibrary().size());
     }
-    @Sql("/no_exchanges.sql")
+
     @Test
     public void testRemoveBookFromUser() {
-
         userService.addBookToUserLibrary(1, 1);
         userService.removeBookFromUserLibrary(1, 1);
 
@@ -79,10 +78,8 @@ public class UserServiceTest {
         assertEquals(0, updatedUser.getLibrary().size());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testAddBookToOfferedByUser() {
-
         userService.addBookToUserLibrary(1, 1);
         userService.addBookToOfferedByUser(1, 1);
 
@@ -92,10 +89,8 @@ public class UserServiceTest {
         assertEquals(1, updatedUser.getOfferedBooks().size());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testAddBookInExchangeToOfferedByUser() {
-
         userService.addBookToUserLibrary(1, 1);
         userService.addBookToUserLibrary(1, 3);
         userService.addBookToUserLibrary(2, 2);
@@ -120,10 +115,8 @@ public class UserServiceTest {
         assertEquals(0, updatedUser.getOfferedBooks().size());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testRemoveBookFromOfferedByUser() {
-
         userService.addBookToUserLibrary(1, 1);
         userService.addBookToOfferedByUser(1, 1);
         userService.removeBookFromOfferedByUser(1, 1);
@@ -133,10 +126,8 @@ public class UserServiceTest {
         assertEquals(0, updatedUser.getOfferedBooks().size());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testAddAddressToUser() {
-
         String address = "Test";
 
         userService.addAddressToUser(1, address);
@@ -146,10 +137,8 @@ public class UserServiceTest {
         assertEquals(1, updatedUser.getAddressList().size());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testRemoveAddressFromUser() {
-
         String address1 = "Test";
         String address2 = "Test";
 
@@ -162,10 +151,8 @@ public class UserServiceTest {
         assertEquals(1, updatedUser.getAddressList().size());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testUpdateUserPhone() {
-
         String phone = "89123456789";
 
         userService.updateUserPhone(1, phone);
@@ -175,10 +162,8 @@ public class UserServiceTest {
         assertEquals("89123456789", updatedUser.getPhoneNumber());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testUpdateUserMail() {
-
         String email = "new@example.com";
 
         userService.updateUserMail(1, email);
@@ -188,10 +173,8 @@ public class UserServiceTest {
         assertEquals("new@example.com", updatedUser.getEmail());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testUpdateMainAddress() {
-
         String address1 = "Test";
         String address2 = "Test2";
 
@@ -204,10 +187,8 @@ public class UserServiceTest {
         assertEquals("Test2", updatedUser.getMainAddress());
     }
 
-    @Sql("/no_exchanges.sql")
     @Test
     public void testGetAllUserExchanges() {
-
         Exchange ex1 = new Exchange();
         ex1.setMember1(userService.getUserById(1));
         ex1.setMember2(userService.getUserById(2));

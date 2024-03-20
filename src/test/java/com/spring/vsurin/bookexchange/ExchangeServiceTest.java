@@ -3,7 +3,6 @@ package com.spring.vsurin.bookexchange;
 import com.spring.vsurin.bookexchange.app.BookService;
 import com.spring.vsurin.bookexchange.app.ExchangeService;
 import com.spring.vsurin.bookexchange.app.UserService;
-import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.Exchange;
 import com.spring.vsurin.bookexchange.domain.ExchangeStatus;
 import com.spring.vsurin.bookexchange.domain.User;

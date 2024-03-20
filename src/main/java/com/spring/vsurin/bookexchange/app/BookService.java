@@ -31,21 +31,21 @@ public class BookService {
      * @throws IllegalStateException если книга равна null
      */
     public Book createBook(Book book) {
-        if (book != null) {
-            try {
-                List<Book> existingBooks = bookRepository.findByTitleAndAuthorIgnoreCase(book.getTitle(), book.getAuthor());
-                if (!existingBooks.isEmpty()) {
-                    log.warn("Книга с названием {} и автором {} уже есть в базе, добавление не выполнено", book.getTitle(), book.getAuthor());
-                    return book;
-                }
-                bookRepository.save(book);
-                log.info("Создана книга с id {}", book.getId());
-                return book;
-            } catch (Exception e) {
-                throw new RuntimeException("Ошибка при создании книги", e);
-            }
-        } else {
+        if (book == null) {
             throw new IllegalArgumentException("Книга не может быть null");
+        }
+
+        try {
+            List<Book> existingBooks = bookRepository.findByTitleAndAuthorIgnoreCase(book.getTitle(), book.getAuthor());
+            if (!existingBooks.isEmpty()) {
+                log.error("Книга с названием {} и автором {} уже есть в базе, добавление не выполнено", book.getTitle(), book.getAuthor());
+                return book;
+            }
+            bookRepository.save(book);
+            log.info("Создана книга с id {}", book.getId());
+            return book;
+        } catch (Exception e) {
+            throw new RuntimeException("Ошибка при создании книги", e);
         }
     }
 
