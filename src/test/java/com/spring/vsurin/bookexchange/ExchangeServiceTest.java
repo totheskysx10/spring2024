@@ -68,7 +68,7 @@ public class ExchangeServiceTest {
 
         assertThrows(IllegalArgumentException.class, () -> {
             exchangeService.getExchangeById(2);
-    });
+        });
     }
 
     @Sql("/no_exchanges.sql")
@@ -163,5 +163,27 @@ public class ExchangeServiceTest {
         assertEquals(ExchangeStatus.COMPLETED, exchangeService.getExchangeById(ex1.getId()).getStatus());
         assertEquals(2, updatedUser.getLibrary().get(0).getId());
         assertEquals(1, updatedUser2.getLibrary().get(0).getId());
+    }
+
+    @Sql("/no_exchanges.sql")
+    @Test
+    public void testSetProblemsStatus() {
+        userService.addBookToUserLibrary(1, 1);
+        userService.addBookToUserLibrary(2, 2);
+        userService.addBookToOfferedByUser(1, 1);
+        userService.addBookToOfferedByUser(2, 2);
+
+        Exchange ex1 = new Exchange();
+        ex1.setMember1(userService.getUserById(1));
+        ex1.setMember2(userService.getUserById(2));
+        ex1.setExchangedBook1(bookService.getBookById(1));
+        ex1.setExchangedBook2(bookService.getBookById(2));
+        Exchange savedEx1 = exchangeService.createExchange(ex1);
+        exchangeService.setNoTrack(1, savedEx1.getId());
+        exchangeService.setNoTrack(2, savedEx1.getId());
+
+        assertThrows(IllegalStateException.class, () -> {
+            exchangeService.setProblemsStatus(ex1.getId());
+        });
     }
 }

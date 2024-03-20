@@ -6,7 +6,7 @@ import lombok.Getter;
 import lombok.NoArgsConstructor;
 import lombok.Setter;
 
-import java.util.Date;
+import java.time.LocalDate;
 
 /**
  * Класс, представляющий обменную операцию.
@@ -126,5 +126,14 @@ public class Exchange {
     @Column(name = "date")
     @Getter
     @Setter
-    private Date date;
+    private LocalDate date;
+
+    /**
+     * Вызывается перед сохранением сущности в базу данных для установки текущей даты перед сохранением.
+     * Автоматически устанавливает текущую дату в поле date перед сохранением сущности.
+     */
+    @PrePersist
+    public void setCurrentDate() {
+        date = LocalDate.now();
+    }
 }

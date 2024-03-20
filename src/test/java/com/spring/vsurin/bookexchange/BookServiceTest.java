@@ -5,17 +5,21 @@ import com.spring.vsurin.bookexchange.app.UserService;
 import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.BookGenre;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.test.context.jdbc.Sql;
+import org.springframework.test.context.junit.jupiter.SpringExtension;
 
 
 import java.time.Year;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
-
 
 @SpringBootTest
 public class BookServiceTest {
@@ -57,7 +61,8 @@ public class BookServiceTest {
     @Sql("/no_exchanges.sql")
     @Test
     public void testGetAllBooksInBase() {
-        Page<Book> booksPage = bookService.getAllBooksInBase(0, 10);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Book> booksPage = bookService.getAllBooksInBase(pageable);
         List<Book> books = booksPage.getContent();
         assertEquals(3, books.size());
     }
@@ -65,7 +70,8 @@ public class BookServiceTest {
     @Sql("/no_exchanges.sql")
     @Test
     public void testSearchByGenre() {
-        Page<Book> booksPage = bookService.searchByGenre(BookGenre.FICTION, 0, 10); // Получить первые 10 книг жанра "Фантастика"
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Book> booksPage = bookService.searchByGenre(BookGenre.FICTION, pageable);
         List<Book> books = booksPage.getContent();
 
         assertEquals(1, books.size());
@@ -74,10 +80,12 @@ public class BookServiceTest {
     @Sql("/no_exchanges.sql")
     @Test
     public void testSearchByTitleOrAuthor() {
+        Pageable pageable = PageRequest.of(0, 10);
         String searchRequest = "Test Bo";
-        List<Book> foundBooks = bookService.searchByTitleOrAuthor(searchRequest);
+        Page<Book> booksPage = bookService.searchByTitleOrAuthor(searchRequest, pageable);
+        List<Book> books = booksPage.getContent();
 
-        assertEquals(3, foundBooks.size());
+        assertEquals(3, books.size());
     }
 
     @Sql("/no_exchanges.sql")

@@ -30,6 +30,7 @@ public class UserService {
      * Создает нового пользователя и, если это не null, сохраняет его в базе данных.
      * @param user объект пользователя для создания
      * @return сохраненный пользователь
+     * @throws IllegalStateException если пользователь равен null
      */
     public User createUser(User user) {
         if (user != null) {
@@ -55,7 +56,6 @@ public class UserService {
     public User getUserById(long userId) {
         User foundUser = userRepository.findById(userId);
         if (foundUser == null) {
-            log.error("Не найден пользователь с id {}", userId);
             throw new IllegalArgumentException("Пользователь с id " + userId + " не найден");
         }
         else {
@@ -69,8 +69,13 @@ public class UserService {
      * @param userId идентификатор пользователя для удаления
      */
     public void deleteUser(long userId) {
-        userRepository.deleteById(userId);
-        log.info("Удалён пользователь с id {}", userId);
+        User foundUser = userRepository.findById(userId);
+        if (foundUser == null) {
+            throw new IllegalArgumentException("Пользователь с id " + userId + " не найден");
+        } else {
+            userRepository.deleteById(userId);
+            log.info("Удалён пользователь с id {}", userId);
+        }
     }
 
     /**
@@ -106,10 +111,10 @@ public class UserService {
 
         if (book != null) {
             if (user.getLibrary().contains(book)) {
-                List<Exchange> AllUserExchanges = getAllUserExchanges(userId);
+                List<Exchange> allUserExchanges = getAllUserExchanges(userId);
 
                 boolean bookInExchange = false;
-                for (Exchange ex : AllUserExchanges) {
+                for (Exchange ex : allUserExchanges) {
                     if (ex.getStatus() == ExchangeStatus.CONFIRMED || ex.getStatus() == ExchangeStatus.IN_PROGRESS || ex.getStatus() == ExchangeStatus.PROBLEMS)
                         if (ex.getExchangedBook1().getId() == bookId || ex.getExchangedBook2().getId() == bookId) {
                             bookInExchange = true;

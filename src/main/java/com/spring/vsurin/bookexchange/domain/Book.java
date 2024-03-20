@@ -2,7 +2,6 @@ package com.spring.vsurin.bookexchange.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
-import org.hibernate.validator.constraints.Range;
 
 import java.time.Year;
 import java.util.List;
@@ -103,7 +102,6 @@ public class Book {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "book_marks", joinColumns = @JoinColumn(name = "book_id"))
     @Getter
-    //@Range(min = 1, max = 10)
     private List<Integer> marks;
 
     /**

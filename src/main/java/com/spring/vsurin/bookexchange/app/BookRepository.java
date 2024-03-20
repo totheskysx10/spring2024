@@ -16,7 +16,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     Book findById(long id);
     Page<Book> findByGenre(BookGenre genre, Pageable pageable);
     List<Book> findByTitleAndAuthorIgnoreCase(String title, String author);
-    List<Book> findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(String title, String author);
+    Page<Book> findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(String title, String author, Pageable pageable);
 
     @Query("SELECT b FROM Book b WHERE SIZE(b.usersOfferingForExchange) > 0")
     Page<Book> findBooksWithUsersOfferingForExchange(Pageable pageable);

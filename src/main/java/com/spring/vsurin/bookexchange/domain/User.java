@@ -52,6 +52,7 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "book_id")
     )
     @Getter
+    @Setter
     private List<Book> library;
 
     /**
@@ -64,6 +65,7 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "book_id")
     )
     @Getter
+    @Setter
     private List<Book> offeredBooks;
 
     /**
@@ -72,6 +74,7 @@ public class User {
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_addresses", joinColumns = @JoinColumn(name = "user_id"))
     @Getter
+    @Setter
     private List<String> addressList;
 
     /**
@@ -87,6 +90,7 @@ public class User {
      */
     @OneToMany(mappedBy = "member1", fetch = FetchType.EAGER)
     @Getter
+    @Setter
     private List<Exchange> exchangesAsMember1;
 
     /**
@@ -94,6 +98,7 @@ public class User {
      */
     @OneToMany(mappedBy = "member2", fetch = FetchType.EAGER)
     @Getter
+    @Setter
     private List<Exchange> exchangesAsMember2;
 
     /**

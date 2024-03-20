@@ -2,11 +2,10 @@ package com.spring.vsurin.bookexchange.app;
 
 import com.spring.vsurin.bookexchange.domain.Exchange;
 import com.spring.vsurin.bookexchange.domain.ExchangeStatus;
-import com.spring.vsurin.bookexchange.domain.User;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
+import java.time.LocalDate;
 import java.util.List;
 
 /**
@@ -32,6 +31,7 @@ public class ExchangeService {
      *
      * @param exchange Объект Exchange, который необходимо сохранить.
      * @return Созданный объект Exchange.
+     * @throws IllegalStateException если обмен равен null
      */
     public Exchange createExchange(Exchange exchange) {
         if (exchange != null) {
@@ -43,7 +43,6 @@ public class ExchangeService {
                 log.info("Создан обмен с id {}", exchange.getId());
                 return exchange;
             } catch (Exception e) {
-                log.error("Ошибка при создании обмена: {}", e.getMessage());
                 throw new RuntimeException("Ошибка при создании обмена", e);
             }
         } else {
@@ -59,7 +58,6 @@ public class ExchangeService {
     public Exchange getExchangeById(long exchangeId) {
         Exchange foundExchange = exchangeRepository.findById(exchangeId);
         if (foundExchange == null) {
-            log.error("Не найден обмен с id {}", exchangeId);
             throw new IllegalArgumentException("Обмен с id " + exchangeId + " не найден");
         }
         else {
@@ -167,7 +165,7 @@ public class ExchangeService {
 
         exchangeRepository.save(exchange);
         if (exchange.isReceived1() && exchange.isReceived2())
-            FinalizeExchange(exchangeId);
+            finalizeExchange(exchangeId);
     }
 
     /**
@@ -175,14 +173,41 @@ public class ExchangeService {
      *
      * @param exchangeId Идентификатор обмена.
      */
-    private void FinalizeExchange(long exchangeId) {
+    private void finalizeExchange(long exchangeId) {
         Exchange exchange = getExchangeById(exchangeId);
-        userService.removeBookFromUserLibrary(exchange.getMember1().getId(), exchange.getExchangedBook1().getId());
-        userService.removeBookFromUserLibrary(exchange.getMember2().getId(), exchange.getExchangedBook2().getId());
-        userService.addBookToUserLibrary(exchange.getMember2().getId(), exchange.getExchangedBook1().getId());
-        userService.addBookToUserLibrary(exchange.getMember1().getId(), exchange.getExchangedBook2().getId());
+        long member1Id = exchange.getMember1().getId();
+        long member2Id = exchange.getMember2().getId();
+        long exchangedBook1Id = exchange.getExchangedBook1().getId();
+        long exchangedBook2Id = exchange.getExchangedBook2().getId();
+
+        userService.removeBookFromUserLibrary(member1Id, exchangedBook1Id);
+        userService.removeBookFromUserLibrary(member2Id, exchangedBook2Id);
+        userService.addBookToUserLibrary(member2Id, exchangedBook1Id);
+        userService.addBookToUserLibrary(member1Id, exchangedBook2Id);
         exchange.setStatus(ExchangeStatus.COMPLETED);
         exchangeRepository.save(exchange);
         log.info("Обмен {} успешно завершён, библиотеки пользователей обновлены", exchange.getId());
+    }
+
+    /**
+     * Устанавливает статус "PROBLEMS" для обмена с указанным идентификатором, если прошло 30 или более дней с момента его создания.
+     * Если условие не выполнено, выбрасывается исключение IllegalStateException.
+     *
+     * @param exchangeId Идентификатор обмена, для которого требуется установить статус "PROBLEMS".
+     * @throws IllegalStateException если не удалось установить статус "PROBLEMS", потому что не прошло 30 дней с момента создания обмена.
+     */
+    public void setProblemsStatus(long exchangeId) {
+        Exchange exchange = getExchangeById(exchangeId);
+        LocalDate currentDate = LocalDate.now();
+        LocalDate thirtyDaysAfterDate = exchange.getDate().plusDays(30);
+
+        if (currentDate.isAfter(thirtyDaysAfterDate) || currentDate.equals(thirtyDaysAfterDate)) {
+            exchange.setStatus(ExchangeStatus.PROBLEMS);
+            log.info("Для обмена {} установлен статус PROBLEMS", exchange.getId());
+        } else {
+            log.error("Для обмена {} не удалось установить статус PROBLEMS", exchange.getId());
+            throw new IllegalStateException("Не удалось установить статус PROBLEMS для обмена с id: " + exchangeId +
+                    ", так как не прошло 30 дней с момента создания обмена.");
+        }
     }
 }
