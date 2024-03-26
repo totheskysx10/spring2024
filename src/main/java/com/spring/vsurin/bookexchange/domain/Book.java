@@ -16,6 +16,7 @@ import java.util.List;
 @AllArgsConstructor
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
+@Builder
 public class Book {
     /**
      * Уникальный идентификатор книги в базе.
@@ -39,7 +40,6 @@ public class Book {
      */
     @Column(name = "book_title")
     @Getter
-    @Setter
     @EqualsAndHashCode.Include
     private String title;
 
@@ -48,7 +48,6 @@ public class Book {
      */
     @Column(name = "book_author")
     @Getter
-    @Setter
     @EqualsAndHashCode.Include
     private String author;
 
@@ -57,7 +56,6 @@ public class Book {
      */
     @Column(name = "book_year")
     @Getter
-    @Setter
     @EqualsAndHashCode.Include
     private Year publicationYear;
 
@@ -66,7 +64,6 @@ public class Book {
      */
     @Column(name = "book_isbn")
     @Getter
-    @Setter
     @EqualsAndHashCode.Include
     private String isbn;
 
@@ -76,7 +73,6 @@ public class Book {
     @Enumerated(EnumType.STRING)
     @Column(name = "book_genre")
     @Getter
-    @Setter
     @EqualsAndHashCode.Include
     private BookGenre genre;
 
@@ -101,8 +97,16 @@ public class Book {
      */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "book_marks", joinColumns = @JoinColumn(name = "book_id"))
-    @Getter
     private List<Integer> marks;
+
+    /**
+     * Возвращает итератор для оценок книги.
+     *
+     * @return итератор для оценок книги
+     */
+    public Iterable<Integer> getMarks() {
+        return marks;
+    }
 
     /**
      * Вычисляет рейтинг книги.
@@ -120,5 +124,16 @@ public class Book {
             }
             result = sum / marks.size();
         return result;
+    }
+
+    /**
+     * Добавляет оценку книге.
+     *
+     * @param mark   оценка, которую нужно добавить
+     */
+    public void addMarkToBook(int mark) {
+        if (mark >= 1 && mark <= 10) {
+            marks.add(mark);
+        }
     }
 }

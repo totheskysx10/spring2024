@@ -26,21 +26,23 @@ public class UserController {
 
     @PostMapping
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
-        User newUser = new User();
+        User newUser = User.builder()
+                .username(userDTO.getUsername())
+                .email(userDTO.getEmail())
+                .mainAddress(userDTO.getMainAddress())
+                .phoneNumber(userDTO.getPhoneNumber())
+                .addressList(userDTO.getAddressList())
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
+                .library(new ArrayList<>())
+                .offeredBooks(new ArrayList<>())
+                .build();
 
-        newUser.setUsername(userDTO.getUsername());
-        newUser.setEmail(userDTO.getEmail());
-        newUser.setMainAddress(userDTO.getMainAddress());
-        newUser.setPhoneNumber(userDTO.getPhoneNumber());
-        newUser.setAddressList(userDTO.getAddressList());
-        newUser.setExchangesAsMember1(new ArrayList<>());
-        newUser.setExchangesAsMember2(new ArrayList<>());
-        newUser.setLibrary(new ArrayList<>());
-        newUser.setOfferedBooks(new ArrayList<>());
         userService.createUser(newUser);
 
         return new ResponseEntity<>(userAssembler.toModel(newUser), HttpStatus.CREATED);
     }
+
 
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable long userId) {

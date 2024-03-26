@@ -4,7 +4,6 @@ import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.BookGenre;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Component;
 
@@ -99,8 +98,7 @@ public class BookService {
      *
      * @return Список книг, доступных для обмена.
      */
-    public Page<Book> getAvailableForExchangeBooks(int page, int size) {
-        PageRequest pageable = PageRequest.of(page, size);
+    public Page<Book> getAvailableForExchangeBooks(Pageable pageable) {
         return bookRepository.findBooksWithUsersOfferingForExchange(pageable);
     }
 
@@ -114,13 +112,13 @@ public class BookService {
         Book book = getBookById(bookId);
         if (book != null) {
             if (mark >= 1 && mark <= 10) {
-                book.getMarks().add(mark);
+                book.addMarkToBook(mark);
                 bookRepository.save(book);
                 log.info("Оценка {} добавлена в список оценок книги с id {}", mark, bookId);
-            }
-            log.error("Оценка {} не добавлена в список оценок книги с id {} - она должна быть от 1 до 10", mark, bookId);
-        }
-        log.error("Оценка {} не добавлена в список оценок книги с id {} - книга не должна быть null", mark, bookId);
+            } else
+                log.error("Оценка {} не добавлена в список оценок книги с id {} - она должна быть от 1 до 10", mark, bookId);
+        } else
+            log.error("Оценка {} не добавлена в список оценок книги с id {} - книга не должна быть null", mark, bookId);
     }
 
     /**

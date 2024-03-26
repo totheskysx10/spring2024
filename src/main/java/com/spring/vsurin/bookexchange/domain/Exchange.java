@@ -129,6 +129,25 @@ public class Exchange {
     private LocalDate date;
 
     /**
+     * Конструктор для создания объекта обмена, принимающий членов, книги и адреса.
+     *
+     * @param member1        Первый участник обмена.
+     * @param member2        Второй участник обмена.
+     * @param exchangedBook1 Книга, отправляемая первым участником.
+     * @param exchangedBook2 Книга, отправляемая вторым участником.
+     * @param address1       Адрес проживания (доставки) первого участника.
+     * @param address2       Адрес проживания (доставки) второго участника.
+     */
+    public Exchange(User member1, User member2, Book exchangedBook1, Book exchangedBook2, String address1, String address2) {
+        this.member1 = member1;
+        this.member2 = member2;
+        this.exchangedBook1 = exchangedBook1;
+        this.exchangedBook2 = exchangedBook2;
+        this.address1 = address1;
+        this.address2 = address2;
+    }
+
+    /**
      * Вызывается перед сохранением сущности в базу данных для установки текущей даты перед сохранением.
      * Автоматически устанавливает текущую дату в поле date перед сохранением сущности.
      */

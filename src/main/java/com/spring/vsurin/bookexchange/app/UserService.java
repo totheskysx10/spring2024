@@ -5,7 +5,6 @@ import com.spring.vsurin.bookexchange.domain.Exchange;
 import com.spring.vsurin.bookexchange.domain.ExchangeStatus;
 import com.spring.vsurin.bookexchange.domain.User;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -94,8 +93,9 @@ public class UserService {
                 userRepository.save(user);
                 log.info("Книга с id {} добавлена в библиотеку пользователя с id {}", bookId, userId);
             } else
-                log.error("Книги не существует!");
-        }
+                log.error("Книга уже в библиотеке!");
+        } else
+            log.error("Книги не существует!");
     }
 
     /**

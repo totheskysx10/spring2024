@@ -30,10 +30,14 @@ public class UserServiceTest {
         userService.deleteUser(1);
         userService.deleteUser(2);
         userService.deleteUser(3);
-        User user = new User();
-        user.setUsername("testUser");
-        user.setEmail("test@example.com");
-        user.setPhoneNumber("8915461564");
+
+        User user = User.builder()
+                .username("testUser")
+                .email("test@example.com")
+                .phoneNumber("8915461564")
+                .mainAddress("")
+                .build();
+
         User savedUser = userService.createUser(user);
         assertNotNull(savedUser.getId());
     }

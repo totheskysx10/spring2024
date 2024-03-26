@@ -18,5 +18,5 @@ public class BookDTO extends RepresentationModel<BookDTO> {
     private BookGenre genre;
     private String description;
     private List<Long> userIdsOfferingForExchange;
-    private List<Integer> marks;
+    private Iterable<Integer> marks;
 }

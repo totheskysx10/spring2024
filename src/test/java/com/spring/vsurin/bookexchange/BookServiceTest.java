@@ -26,13 +26,15 @@ public class BookServiceTest {
 
     @Test
     public void testCreateBook() {
-        Book book = new Book();
-        book.setTitle("testBook");
-        book.setAuthor("testBookAuthor");
-        book.setDescription("123desc");
-        book.setGenre(BookGenre.FICTION);
-        book.setIsbn("123");
-        book.setPublicationYear(Year.of(2005));
+        Book book = Book.builder()
+                .title("testBook")
+                .author("testBookAuthor")
+                .description("123desc")
+                .genre(BookGenre.FICTION)
+                .isbn("123")
+                .publicationYear(Year.of(2005))
+                .build();
+
         Book savedBook = bookService.createBook(book);
         assertNotNull(savedBook.getId());
     }
@@ -85,7 +87,8 @@ public class BookServiceTest {
     @Sql("/with_offered.sql")
     @Test
     public void testGetAvailableForExchangeBooks() {
-        Page<Book> booksPage = bookService.getAvailableForExchangeBooks(0, 10);
+        Pageable pageable = PageRequest.of(0, 10);
+        Page<Book> booksPage = bookService.getAvailableForExchangeBooks(pageable);
         List<Book> books = booksPage.getContent();
 
         assertEquals(1, books.size());
@@ -99,7 +102,13 @@ public class BookServiceTest {
 
         Book updatedBook = bookService.getBookById(1);
 
-        assertEquals(2, updatedBook.getMarks().size());
+        Iterable<Integer> marks = updatedBook.getMarks();
+        int count = 0;
+        for (Integer mark : marks) {
+            count++;
+        }
+
+        assertEquals(2, count);
     }
 
     @Sql("/no_exchanges.sql")

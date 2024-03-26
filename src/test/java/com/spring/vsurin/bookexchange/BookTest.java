@@ -17,10 +17,10 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 public class BookTest {
 
     @Test
-    public void testCalculateBookRating() {
+    public void testAddMarkToBookAndCalculateBookRating() {
         Book book = new Book(1, new ArrayList<>(), "Title", "Author", Year.of(2005), "123", BookGenre.FICTION, "DESC", new ArrayList<>(), new ArrayList<>());
-        book.getMarks().add(5);
-        book.getMarks().add(7);
+        book.addMarkToBook(5);
+        book.addMarkToBook(7);
 
         int expectedResult = 6;
 
