@@ -59,17 +59,19 @@ public class UserServiceTest {
     @Test
     public void testDeleteUser() {
         userService.deleteUser(1);
-        assertNull(userService.getUserById(1));
+        assertThrows(IllegalArgumentException.class, () -> {
+            userService.getUserById(1);
+        });
     }
 
     @Test
     public void testAddBookToUser() {
-            userService.addBookToUserLibrary(1, 1);
+        userService.addBookToUserLibrary(1, 1);
 
-            User updatedUser = userService.getUserById(1);
+        User updatedUser = userService.getUserById(1);
 
-            assertNotNull(updatedUser);
-            assertEquals(1, updatedUser.getLibrary().size());
+        assertNotNull(updatedUser);
+        assertEquals(1, updatedUser.getLibrary().size());
     }
 
     @Test
