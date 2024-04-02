@@ -3,7 +3,6 @@ package com.spring.vsurin.bookexchange.extern.api;
 import com.spring.vsurin.bookexchange.app.BookService;
 import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.BookGenre;
-import com.spring.vsurin.bookexchange.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -47,7 +46,6 @@ public class BookController {
         return new ResponseEntity<>(bookAssembler.toModel(newBook), HttpStatus.CREATED);
     }
 
-
     @GetMapping("/{bookId}")
     public ResponseEntity<BookDTO> getBookById(@PathVariable long bookId) {
         Book book = bookService.getBookById(bookId);
@@ -87,6 +85,18 @@ public class BookController {
     @PutMapping("/{bookId}/description")
     public ResponseEntity<Void> updateDescriptionToBook(@PathVariable long bookId, @RequestParam String desc) {
         bookService.updateDescriptionToBook(bookId, desc);
+        return ResponseEntity.ok().build();
+    }
+
+    @GetMapping("/{bookId}/cover")
+    public ResponseEntity<byte[]> getBookCover(@PathVariable long bookId) {
+        byte[] coverImage = bookService.getBookCover(bookId);
+        return ResponseEntity.ok(coverImage);
+    }
+
+    @PutMapping("/{bookId}/cover")
+    public ResponseEntity<Void> updateCoverToBook(@PathVariable long bookId, @RequestParam byte[] image) {
+        bookService.updateBookCover(bookId, image);
         return ResponseEntity.ok().build();
     }
 }

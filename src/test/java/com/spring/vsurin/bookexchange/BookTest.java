@@ -18,7 +18,8 @@ public class BookTest {
 
     @Test
     public void testAddMarkToBookAndCalculateBookRating() {
-        Book book = new Book(1, new ArrayList<>(), "Title", "Author", Year.of(2005), "123", BookGenre.FICTION, "DESC", new ArrayList<>(), new ArrayList<>());
+        byte[] image = new byte[1];
+        Book book = new Book(1, new ArrayList<>(), "Title", "Author", Year.of(2005), "123", BookGenre.FICTION, "DESC", new ArrayList<>(), new ArrayList<>(), image);
         book.addMarkToBook(5);
         book.addMarkToBook(7);
 

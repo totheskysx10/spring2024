@@ -10,6 +10,7 @@ import lombok.*;
 @Table(name = "requests")
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Request {
     /**
      * Уникальный идентификатор заявки.

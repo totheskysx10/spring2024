@@ -59,7 +59,7 @@ public class BookService {
             throw new IllegalArgumentException("Книга с id " + bookId + " не найдена");
         }
         else {
-            log.info("Найдена книга с id {}", bookId);
+           log.info("Найдена книга с id {}", bookId);
             return foundBook;
         }
     }
@@ -133,6 +133,32 @@ public class BookService {
             book.setDescription(desc);
             bookRepository.save(book);
             log.info("Описание добавлено для книги с id {}", bookId);
+        }
+    }
+
+    /**
+     * Получает изображение обложки книги по её идентификатору.
+     *
+     * @param bookId идентификатор книги
+     * @return изображение обложки книги в виде массива байтов
+     */
+    public byte[] getBookCover(long bookId) {
+        Book book = getBookById(bookId);
+        return book.getCoverImage();
+    }
+
+    /**
+     * Обновляет изображение обложки книги по её идентификатору.
+     *
+     * @param bookId идентификатор книги
+     * @param image новое изображение обложки книги в виде массива байтов
+     */
+    public void updateBookCover(long bookId, byte[] image) {
+        Book book = getBookById(bookId);
+        if (book != null) {
+            book.setCoverImage(image);
+            bookRepository.save(book);
+            log.info("Обложка добавлена/обновлена для книги с id {}", bookId);
         }
     }
 }

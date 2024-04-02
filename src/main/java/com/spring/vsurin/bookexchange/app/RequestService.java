@@ -81,6 +81,12 @@ public class RequestService {
      */
     public void acceptRequest(long requestId, long bookId) {
         Request request = getRequestById(requestId);
+
+        if (request.getStatus() == RequestStatus.REJECTED) {
+            log.error("Приянть заявку {} невозможно - она уже была отклонена!", requestId);
+            return;
+        }
+
         Book bookReceiverWants = bookService.getBookById(bookId);
 
         User sender = request.getSender();
@@ -96,7 +102,7 @@ public class RequestService {
                 relatedRequest.setStatus(RequestStatus.ACCEPTED);
                 relatedRequest.setBookReceiverWants(bookReceiverWants);
                 Exchange exchange = new Exchange(relatedRequest.getSender(), relatedRequest.getReceiver(),
-                        relatedRequest.getBookSenderWants(), relatedRequest.getBookReceiverWants(),
+                        relatedRequest.getBookReceiverWants(), relatedRequest.getBookSenderWants(),
                         relatedRequest.getSender().getMainAddress(), relatedRequest.getReceiver().getMainAddress());
                 exchangeService.createExchange(exchange);
                 log.info("Заявка с id {} принята, создан обмен", requestId);

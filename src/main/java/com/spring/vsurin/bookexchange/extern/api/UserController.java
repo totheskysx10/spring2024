@@ -43,7 +43,6 @@ public class UserController {
         return new ResponseEntity<>(userAssembler.toModel(newUser), HttpStatus.CREATED);
     }
 
-
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable long userId) {
         User user = userService.getUserById(userId);

@@ -182,4 +182,46 @@ public class BookServiceTest {
         Book updatedBook = bookService.getBookById(1);
         assertEquals("DEEEESC", updatedBook.getDescription());
     }
+
+    @Test
+    public void testGetBookCover() {
+        byte[] image = new byte[]{1, 2, 3};
+
+        Book testBook = Book.builder()
+                .id(1)
+                .title("Test Book 4")
+                .author("Test Author 4")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .publicationYear(Year.of(2010))
+                .coverImage(image)
+                .build();
+
+        when(bookRepository.findById(1)).thenReturn(testBook);
+
+        byte[] real = bookService.getBookCover(1);
+        assertEquals(image, real);
+    }
+
+    @Test
+    public void testUpdateBookCover() {
+        Book testBook = Book.builder()
+                .id(1)
+                .title("Test Book 4")
+                .author("Test Author 4")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .publicationYear(Year.of(2010))
+                .build();
+
+        when(bookRepository.findById(1)).thenReturn(testBook);
+
+        byte[] newImage = new byte[]{4, 5, 6};
+        bookService.updateBookCover(1, newImage);
+        Book updatedBook = bookService.getBookById(1);
+
+        assertEquals(newImage, updatedBook.getCoverImage());
+    }
 }

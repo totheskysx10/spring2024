@@ -100,6 +100,15 @@ public class Book {
     private List<Integer> marks;
 
     /**
+     * Изображение обложки книги в виде массива байтов.
+     */
+    @Lob
+    @Column(name = "book_cover")
+    @Getter
+    @Setter
+    private byte[] coverImage;
+
+    /**
      * Возвращает итератор для оценок книги.
      *
      * @return итератор для оценок книги
