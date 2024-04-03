@@ -42,6 +42,7 @@ public class ExchangeService {
             userService.removeBookFromOfferedByUser(exchange.getMember1().getId(), exchange.getExchangedBook1().getId());
             userService.removeBookFromOfferedByUser(exchange.getMember2().getId(), exchange.getExchangedBook2().getId());
             exchange.setStatus(ExchangeStatus.CONFIRMED);
+            exchange.setCurrentDate();
             exchangeRepository.save(exchange);
             log.info("Создан обмен с id {}", exchange.getId());
             return exchange;

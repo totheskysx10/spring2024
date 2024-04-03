@@ -106,34 +106,34 @@ public class UserService {
      */
     public void addBookToOfferedByUser(long userId, long bookId) {
         User user = getUserById(userId);
-
         Book book = bookService.getBookById(bookId);
 
         if (book != null) {
             if (user.getLibrary().contains(book)) {
                 List<Exchange> allUserExchanges = getAllUserExchanges(userId);
 
-                boolean bookInExchange = false;
-                for (Exchange ex : allUserExchanges) {
-                    if (ex.getStatus() == ExchangeStatus.CONFIRMED || ex.getStatus() == ExchangeStatus.IN_PROGRESS || ex.getStatus() == ExchangeStatus.PROBLEMS)
-                        if (ex.getExchangedBook1().getId() == bookId || ex.getExchangedBook2().getId() == bookId) {
-                            bookInExchange = true;
-                            break;
-                        }
-                }
+                boolean bookInExchange = allUserExchanges.stream()
+                        .anyMatch(ex -> ex.getStatus() == ExchangeStatus.CONFIRMED ||
+                                ex.getStatus() == ExchangeStatus.IN_PROGRESS ||
+                                ex.getStatus() == ExchangeStatus.PROBLEMS &&
+                                        (ex.getExchangedBook1().getId() == bookId || ex.getExchangedBook2().getId() == bookId));
 
                 if (!bookInExchange) {
                     user.getOfferedBooks().add(book);
                     book.getUsersOfferingForExchange().add(user);
                     userRepository.save(user);
                     log.info("Книга с id {} в библиотеке пользователя с id {} доступна для обмена", bookId, userId);
-                } else
+                } else {
                     log.error("Книга с id {} в библиотеке пользователя с id {} не доступна для обмена! Она принимает участие в другом обмене!", bookId, userId);
-            } else
+                }
+            } else {
                 log.error("Книга с id {} в библиотеке пользователя с id {} не доступна для обмена, т.к. отсутствует в библиотеке!", bookId, userId);
-        } else
+            }
+        } else {
             log.error("Книги не существует!");
+        }
     }
+
 
     /**
      * Удаляет книгу в библиотеке из тех, которые пользователь готов обменять.

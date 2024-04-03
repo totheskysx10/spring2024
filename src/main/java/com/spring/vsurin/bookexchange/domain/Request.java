@@ -27,7 +27,6 @@ public class Request {
     @ManyToOne
     @JoinColumn(name = "request_sender")
     @Getter
-    @Setter
     @NonNull
     private User sender;
 
@@ -37,7 +36,6 @@ public class Request {
     @ManyToOne
     @JoinColumn(name = "request_receiver")
     @Getter
-    @Setter
     @NonNull
     private User receiver;
 
@@ -47,7 +45,6 @@ public class Request {
     @ManyToOne
     @JoinColumn(name = "request_book_sender_wants")
     @Getter
-    @Setter
     @NonNull
     private Book bookSenderWants;
 

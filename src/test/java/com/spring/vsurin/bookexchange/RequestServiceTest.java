@@ -31,145 +31,69 @@ public class RequestServiceTest {
     @Sql("/with_offered2.sql")
     @Test
     public void testCreateRequest() {
-        Request request = new Request();
-        request.setSender(userService.getUserById(1));
-        request.setReceiver(userService.getUserById(2));
-        request.setBookSenderWants(bookService.getBookById(3));
+    Request request = new Request(1, userService.getUserById(1), userService.getUserById(2), bookService.getBookById(3), bookService.getBookById(1), RequestStatus.ACTUAL, "");
         Request savedReq1 = requestService.createRequest(request);
         assertNotNull(savedReq1.getId());
     }
 
-    @Sql("/with_offered2.sql")
+    @Sql("/with_req.sql")
     @Test
     public void testGetRequestById() {
-        Request request = new Request();
-        request.setSender(userService.getUserById(1));
-        request.setReceiver(userService.getUserById(2));
-        request.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq1 = requestService.createRequest(request);
-
-        long requestId = savedReq1.getId();
-        Request retrievedReq = requestService.getRequestById(requestId);
+        Request retrievedReq = requestService.getRequestById(1);
         assertNotNull(retrievedReq);
-        assertEquals(requestId, retrievedReq.getId());
+        assertEquals(1, retrievedReq.getId());
     }
 
-    @Sql("/with_offered2.sql")
+    @Sql("/with_req.sql")
     @Test
     public void testGetRequestByIdNull() {
-        Request request = new Request();
-        request.setSender(userService.getUserById(1));
-        request.setReceiver(userService.getUserById(2));
-        request.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq1 = requestService.createRequest(request);
-
         assertThrows(IllegalArgumentException.class, () -> {
-            requestService.getRequestById(2);
+            requestService.getRequestById(5);
         });
     }
 
-    @Sql("/with_offered2.sql")
+    @Sql("/with_req.sql")
     @Test
     public void testAcceptRequest() {
-        Request request1 = new Request();
-        request1.setSender(userService.getUserById(1));
-        request1.setReceiver(userService.getUserById(2));
-        request1.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq1 = requestService.createRequest(request1);
-
-        Request request2 = new Request();
-        request2.setSender(userService.getUserById(3));
-        request2.setReceiver(userService.getUserById(2));
-        request2.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq2 = requestService.createRequest(request2);
-
-        requestService.acceptRequest(request1.getId(), 1);
+        requestService.acceptRequest(1, 1);
 
         assertEquals(RequestStatus.ACCEPTED, requestService.getRequestById(1).getStatus());
         assertEquals(RequestStatus.REJECTED, requestService.getRequestById(2).getStatus());
     }
 
-    @Sql("/with_offered2.sql")
+    @Sql("/with_req.sql")
     @Test
     public void testAcceptRequestNoRejectedRequests() {
-        Request request1 = new Request();
-        request1.setSender(userService.getUserById(1));
-        request1.setReceiver(userService.getUserById(2));
-        request1.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq1 = requestService.createRequest(request1);
-
-        Request request2 = new Request();
-        request2.setSender(userService.getUserById(3));
-        request2.setReceiver(userService.getUserById(2));
-        request2.setBookSenderWants(bookService.getBookById(2));
-        Request savedReq2 = requestService.createRequest(request2);
-
-        requestService.acceptRequest(request1.getId(), 1);
+        requestService.acceptRequest(1, 1);
 
         assertEquals(RequestStatus.ACCEPTED, requestService.getRequestById(1).getStatus());
-        assertEquals(RequestStatus.ACTUAL, requestService.getRequestById(2).getStatus());
+        assertEquals(RequestStatus.ACTUAL, requestService.getRequestById(3).getStatus());
     }
 
-    @Sql("/with_offered2.sql")
+    @Sql("/with_req.sql")
     @Test
     public void testRejectRequest() {
-        Request request1 = new Request();
-        request1.setSender(userService.getUserById(1));
-        request1.setReceiver(userService.getUserById(2));
-        request1.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq1 = requestService.createRequest(request1);
-
-        Request request2 = new Request();
-        request2.setSender(userService.getUserById(3));
-        request2.setReceiver(userService.getUserById(2));
-        request2.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq2 = requestService.createRequest(request2);
-
-        requestService.rejectRequest(request1.getId());
+        requestService.rejectRequest(1);
 
         assertEquals(RequestStatus.REJECTED, requestService.getRequestById(1).getStatus());
         assertEquals(RequestStatus.ACTUAL, requestService.getRequestById(2).getStatus());
     }
 
-    @Sql("/with_offered2.sql")
+    @Sql("/with_req.sql")
     @Test
     public void testFindByStatusAndSender() {
-        Request request1 = new Request();
-        request1.setSender(userService.getUserById(1));
-        request1.setReceiver(userService.getUserById(2));
-        request1.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq1 = requestService.createRequest(request1);
-
-        Request request2 = new Request();
-        request2.setSender(userService.getUserById(3));
-        request2.setReceiver(userService.getUserById(2));
-        request2.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq2 = requestService.createRequest(request2);
-
-        requestService.rejectRequest(request1.getId());
+        requestService.rejectRequest(1);
 
         Pageable pageable = PageRequest.of(0, 10);
         Page<Request> reqsPage = requestService.findByStatusAndSender(RequestStatus.ACTUAL, 3, pageable);
         List<Request> reqs = reqsPage.getContent();
-        assertEquals(1, reqs.size());
+        assertEquals(2, reqs.size());
     }
 
-    @Sql("/with_offered2.sql")
+    @Sql("/with_req.sql")
     @Test
     public void testFindByStatusAndReceiver() {
-        Request request1 = new Request();
-        request1.setSender(userService.getUserById(1));
-        request1.setReceiver(userService.getUserById(2));
-        request1.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq1 = requestService.createRequest(request1);
-
-        Request request2 = new Request();
-        request2.setSender(userService.getUserById(3));
-        request2.setReceiver(userService.getUserById(2));
-        request2.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq2 = requestService.createRequest(request2);
-
-        requestService.rejectRequest(request1.getId());
+        requestService.rejectRequest(1);
 
         Pageable pageable = PageRequest.of(0, 10);
         Page<Request> reqsPage = requestService.findByStatusAndReceiver(RequestStatus.REJECTED, 2, pageable);
@@ -177,15 +101,9 @@ public class RequestServiceTest {
         assertEquals(1, reqs.size());
     }
 
-    @Sql("/with_offered2.sql")
+    @Sql("/with_req.sql")
     @Test
     public void testUpdateComment() {
-        Request request1 = new Request();
-        request1.setSender(userService.getUserById(1));
-        request1.setReceiver(userService.getUserById(2));
-        request1.setBookSenderWants(bookService.getBookById(3));
-        Request savedReq1 = requestService.createRequest(request1);
-
         requestService.updateComment(1, "DEEEESC");
 
         Request updatedRequest = requestService.getRequestById(1);
