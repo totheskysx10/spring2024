@@ -33,7 +33,7 @@ public class ExchangeService {
      * @return Созданный объект Exchange.
      * @throws IllegalStateException если обмен равен null
      */
-    public Exchange createExchange(Exchange exchange) {
+    protected Exchange createExchange(Exchange exchange) {
         if (exchange == null) {
             throw new IllegalArgumentException("Обмен не может быть null");
         }

@@ -1,9 +1,28 @@
 server:
   port: 8080
 
+
 spring:
   profiles:
     active: dev
+  security:
+    oauth2:
+      client:
+        registration:
+          yandex:
+            provider: yandex
+            clientId: 313bc096ad3a463f9fcef8718b8944b6
+            clientSecret: aff11c16c16e490080317bec572623ec
+            redirect-uri: http://localhost:8080/login/oauth2/code/yandex
+            authorizationGrantType: authorization_code
+            clientName: Yandex
+
+        provider:
+          yandex:
+            authorization-uri: https://oauth.yandex.ru/authorize
+            token-uri: https://oauth.yandex.ru/token
+            user-name-attribute: default_email
+            userInfoUri: https://login.yandex.ru/info
 
 ---
 spring:

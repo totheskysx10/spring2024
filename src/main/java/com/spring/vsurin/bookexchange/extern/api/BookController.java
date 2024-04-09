@@ -83,7 +83,7 @@ public class BookController {
     }
 
     @PutMapping("/{bookId}/description")
-    public ResponseEntity<Void> updateDescriptionToBook(@PathVariable long bookId, @RequestParam String desc) {
+    public ResponseEntity<Void> updateDescriptionToBook(@PathVariable long bookId, @RequestBody String desc) {
         bookService.updateDescriptionToBook(bookId, desc);
         return ResponseEntity.ok().build();
     }
@@ -95,7 +95,7 @@ public class BookController {
     }
 
     @PutMapping("/{bookId}/cover")
-    public ResponseEntity<Void> updateCoverToBook(@PathVariable long bookId, @RequestParam byte[] image) {
+    public ResponseEntity<Void> updateCoverToBook(@PathVariable long bookId, @RequestBody byte[] image) {
         bookService.updateBookCover(bookId, image);
         return ResponseEntity.ok().build();
     }

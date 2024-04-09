@@ -1,5 +1,6 @@
 package com.spring.vsurin.bookexchange;
 
+import com.spring.vsurin.bookexchange.app.BookCoverProjection;
 import com.spring.vsurin.bookexchange.app.BookRepository;
 import com.spring.vsurin.bookexchange.app.BookService;
 import com.spring.vsurin.bookexchange.domain.Book;
@@ -198,11 +199,15 @@ public class BookServiceTest {
                 .coverImage(image)
                 .build();
 
+        BookCoverProjection bookCoverProjection = () -> image;
+
         when(bookRepository.findById(1)).thenReturn(testBook);
+        when(bookRepository.findCoverImageById(1)).thenReturn(bookCoverProjection);
 
         byte[] real = bookService.getBookCover(1);
         assertEquals(image, real);
     }
+
 
     @Test
     public void testUpdateBookCover() {

@@ -35,6 +35,15 @@ public class User {
     private String username;
 
     /**
+     * Пол пользователя.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_gender")
+    @Getter
+    @NonNull
+    private UserGender gender;
+
+    /**
      * Адрес электронной почты пользователя.
      */
     @Column(name = "user_email")

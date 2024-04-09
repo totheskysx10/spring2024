@@ -1,10 +1,7 @@
 package com.spring.vsurin.bookexchange.domain;
 
 import jakarta.persistence.*;
-import lombok.AllArgsConstructor;
-import lombok.Getter;
-import lombok.NoArgsConstructor;
-import lombok.Setter;
+import lombok.*;
 
 import java.time.LocalDate;
 
@@ -17,6 +14,7 @@ import java.time.LocalDate;
 @Table(name = "exchanges")
 @AllArgsConstructor
 @NoArgsConstructor
+@Builder
 public class Exchange {
     /**
      * Уникальный идентификатор обмена.
@@ -33,7 +31,6 @@ public class Exchange {
     @ManyToOne
     @JoinColumn(name = "member1")
     @Getter
-    @Setter
     private User member1;
 
     /**
@@ -42,7 +39,6 @@ public class Exchange {
     @ManyToOne
     @JoinColumn(name = "member2")
     @Getter
-    @Setter
     private User member2;
 
     /**
@@ -51,7 +47,6 @@ public class Exchange {
     @ManyToOne
     @JoinColumn(name = "book1")
     @Getter
-    @Setter
     private Book exchangedBook1;
 
     /**
@@ -60,7 +55,6 @@ public class Exchange {
     @ManyToOne
     @JoinColumn(name = "book2")
     @Getter
-    @Setter
     private Book exchangedBook2;
 
     /**

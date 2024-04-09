@@ -82,35 +82,42 @@ public class RequestService {
     public void acceptRequest(long requestId, long bookId) {
         Request request = getRequestById(requestId);
 
-        if (request.getStatus() == RequestStatus.REJECTED) {
-            log.error("Приянть заявку {} невозможно - она уже была отклонена!", requestId);
-            return;
-        }
-
-        Book bookReceiverWants = bookService.getBookById(bookId);
-
-        User sender = request.getSender();
-
-        if (!sender.getOfferedBooks().contains(bookReceiverWants)) {
-            throw new IllegalArgumentException("Отправитель заявки не предлагает данную книгу.");
-        }
-
-        List<Request> relatedRequests = requestRepository.findByStatusAndBookSenderWants(RequestStatus.ACTUAL, request.getBookSenderWants());
-
-        for (Request relatedRequest : relatedRequests) {
-            if (relatedRequest.getId() == requestId) {
-                relatedRequest.setStatus(RequestStatus.ACCEPTED);
-                relatedRequest.setBookReceiverWants(bookReceiverWants);
-                Exchange exchange = new Exchange(relatedRequest.getSender(), relatedRequest.getReceiver(),
-                        relatedRequest.getBookReceiverWants(), relatedRequest.getBookSenderWants(),
-                        relatedRequest.getSender().getMainAddress(), relatedRequest.getReceiver().getMainAddress());
-                exchangeService.createExchange(exchange);
-                log.info("Заявка с id {} принята, создан обмен", requestId);
-            } else {
-                relatedRequest.setStatus(RequestStatus.REJECTED);
-                log.info("Заявка с id {} отклонена, так как с запрашиваемой книгой принята к обмену другая заявка", relatedRequest.getId());
+        if (request != null) {
+            if (request.getStatus() == RequestStatus.REJECTED) {
+                log.error("Приянть заявку {} невозможно - она уже была отклонена!", requestId);
+                return;
             }
-            requestRepository.save(relatedRequest);
+
+            Book bookReceiverWants = bookService.getBookById(bookId);
+
+            User sender = request.getSender();
+
+            if (!sender.getOfferedBooks().contains(bookReceiverWants)) {
+                throw new IllegalArgumentException("Отправитель заявки не предлагает данную книгу.");
+            }
+
+            List<Request> relatedRequests = requestRepository.findByStatusAndBookSenderWants(RequestStatus.ACTUAL, request.getBookSenderWants());
+
+            for (Request relatedRequest : relatedRequests) {
+                if (relatedRequest.getId() == requestId) {
+                    relatedRequest.setStatus(RequestStatus.ACCEPTED);
+                    relatedRequest.setBookReceiverWants(bookReceiverWants);
+                    Exchange exchange = Exchange.builder()
+                            .member1(relatedRequest.getSender())
+                            .member2(relatedRequest.getReceiver())
+                            .exchangedBook1(relatedRequest.getBookReceiverWants())
+                            .exchangedBook2(relatedRequest.getBookSenderWants())
+                            .address1(relatedRequest.getSender().getMainAddress())
+                            .address2(relatedRequest.getReceiver().getMainAddress())
+                            .build();
+                    exchangeService.createExchange(exchange);
+                    log.info("Заявка с id {} принята, создан обмен", requestId);
+                } else {
+                    relatedRequest.setStatus(RequestStatus.REJECTED);
+                    log.info("Заявка с id {} отклонена, так как с запрашиваемой книгой принята к обмену другая заявка", relatedRequest.getId());
+                }
+                requestRepository.save(relatedRequest);
+            }
         }
     }
 
@@ -122,9 +129,11 @@ public class RequestService {
      */
     public void rejectRequest(long requestId) {
         Request request = getRequestById(requestId);
-        request.setStatus(RequestStatus.REJECTED);
-        requestRepository.save(request);
-        log.info("Заявка с id {} отклонена", requestId);
+        if (request != null) {
+            request.setStatus(RequestStatus.REJECTED);
+            requestRepository.save(request);
+            log.info("Заявка с id {} отклонена", requestId);
+        }
     }
 
     /**

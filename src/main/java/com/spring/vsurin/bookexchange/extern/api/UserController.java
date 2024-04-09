@@ -28,6 +28,7 @@ public class UserController {
     public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
         User newUser = User.builder()
                 .username(userDTO.getUsername())
+                .gender(userDTO.getGender())
                 .email(userDTO.getEmail())
                 .mainAddress(userDTO.getMainAddress())
                 .phoneNumber(userDTO.getPhoneNumber())

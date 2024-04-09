@@ -20,4 +20,6 @@ public interface BookRepository extends JpaRepository<Book, Long> {
 
     @Query("SELECT b FROM Book b WHERE SIZE(b.usersOfferingForExchange) > 0")
     Page<Book> findBooksWithUsersOfferingForExchange(Pageable pageable);
+
+    BookCoverProjection findCoverImageById(long bookId);
 }

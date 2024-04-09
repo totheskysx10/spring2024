@@ -143,8 +143,12 @@ public class BookService {
      * @return изображение обложки книги в виде массива байтов
      */
     public byte[] getBookCover(long bookId) {
-        Book book = getBookById(bookId);
-        return book.getCoverImage();
+        BookCoverProjection bookCoverProjection = bookRepository.findCoverImageById(bookId);
+        if (bookCoverProjection == null) {
+            return null;
+        } else {
+            return bookCoverProjection.getCoverImage();
+        }
     }
 
     /**

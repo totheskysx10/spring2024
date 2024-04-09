@@ -63,6 +63,15 @@ public class RequestServiceTest {
 
     @Sql("/with_req.sql")
     @Test
+    public void testAcceptRejectedRequest() {
+        requestService.rejectRequest(1);
+        requestService.acceptRequest(1, 1);
+
+        assertEquals(RequestStatus.REJECTED, requestService.getRequestById(1).getStatus());
+    }
+
+    @Sql("/with_req.sql")
+    @Test
     public void testAcceptRequestNoRejectedRequests() {
         requestService.acceptRequest(1, 1);
 

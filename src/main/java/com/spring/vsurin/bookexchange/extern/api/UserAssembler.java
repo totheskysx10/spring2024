@@ -24,6 +24,7 @@ public class UserAssembler extends RepresentationModelAssemblerSupport<User, Use
 
         userDTO.setId(user.getId());
         userDTO.setUsername(user.getUsername());
+        userDTO.setGender(user.getGender());
         userDTO.setEmail(user.getEmail());
         userDTO.setLibraryIds(user.getLibrary().stream()
                 .map(Book::getId)

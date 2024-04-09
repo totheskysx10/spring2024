@@ -94,24 +94,11 @@ public class UserServiceTest {
         assertNotNull(updatedUser);
         assertEquals(1, updatedUser.getOfferedBooks().size());
     }
-
+    @Sql("/with_exchanges.sql")
     @Test
     public void testAddBookInExchangeToOfferedByUser() {
-        userService.addBookToUserLibrary(1, 1);
-        userService.addBookToUserLibrary(1, 3);
-        userService.addBookToUserLibrary(2, 2);
-        userService.addBookToOfferedByUser(1, 1);
-        userService.addBookToOfferedByUser(2, 2);
-
-        Exchange ex1 = new Exchange();
-        ex1.setMember1(userService.getUserById(1));
-        ex1.setMember2(userService.getUserById(2));
-        ex1.setExchangedBook1(bookService.getBookById(1));
-        ex1.setExchangedBook2(bookService.getBookById(2));
-        Exchange savedEx1 = exchangeService.createExchange(ex1);
-        exchangeService.setNoTrack(1, savedEx1.getId());
-        exchangeService.setNoTrack(2, savedEx1.getId());
-
+        exchangeService.setNoTrack(1, 1);
+        exchangeService.setNoTrack(2, 1);
 
         userService.addBookToOfferedByUser(1, 1);
 
@@ -192,24 +179,10 @@ public class UserServiceTest {
         assertNotNull(updatedUser);
         assertEquals("Test2", updatedUser.getMainAddress());
     }
-
+    @Sql("/with_exchanges.sql")
     @Test
     public void testGetAllUserExchanges() {
-        Exchange ex1 = new Exchange();
-        ex1.setMember1(userService.getUserById(1));
-        ex1.setMember2(userService.getUserById(2));
-        ex1.setExchangedBook1(bookService.getBookById(1));
-        ex1.setExchangedBook2(bookService.getBookById(2));
-        Exchange savedEx1 = exchangeService.createExchange(ex1);
-
-        Exchange ex2 = new Exchange();
-        ex2.setMember1(userService.getUserById(2));
-        ex2.setMember2(userService.getUserById(1));
-        ex2.setExchangedBook1(bookService.getBookById(1));
-        ex2.setExchangedBook2(bookService.getBookById(2));
-        Exchange savedEx2 = exchangeService.createExchange(ex2);
-
-        User updUser2 = userService.getUserById(2);
+        User updUser2 = userService.getUserById(1);
 
         assertEquals(2, userService.getAllUserExchanges(updUser2.getId()).size());
     }
