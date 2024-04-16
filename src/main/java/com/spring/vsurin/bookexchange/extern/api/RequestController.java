@@ -5,6 +5,7 @@ import com.spring.vsurin.bookexchange.app.RequestService;
 import com.spring.vsurin.bookexchange.app.UserService;
 import com.spring.vsurin.bookexchange.domain.Request;
 import com.spring.vsurin.bookexchange.domain.RequestStatus;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -30,7 +31,7 @@ public class RequestController {
     }
 
     @PostMapping
-    public ResponseEntity<RequestDTO> createRequest(@RequestBody RequestDTO requestDTO) {
+public ResponseEntity<RequestDTO> createRequest(@RequestBody @Valid RequestDTO requestDTO) {
         Request newRequest = Request.builder()
                 .sender(userService.getUserById(requestDTO.getSenderId()))
                 .receiver(userService.getUserById(requestDTO.getReceiverId()))

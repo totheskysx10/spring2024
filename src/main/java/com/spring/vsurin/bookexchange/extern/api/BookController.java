@@ -3,6 +3,7 @@ package com.spring.vsurin.bookexchange.extern.api;
 import com.spring.vsurin.bookexchange.app.BookService;
 import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.BookGenre;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -28,7 +29,7 @@ public class BookController {
     }
 
     @PostMapping
-    public ResponseEntity<BookDTO> createBook(@RequestBody BookDTO bookDTO) {
+    public ResponseEntity<BookDTO> createBook(@RequestBody @Valid BookDTO bookDTO) {
         Book newBook = Book.builder()
                 .title(bookDTO.getTitle())
                 .author(bookDTO.getAuthor())
@@ -77,13 +78,13 @@ public class BookController {
     }
 
     @PutMapping("/{bookId}/marks")
-    public ResponseEntity<Void> addMarkToBook(@PathVariable long bookId, @RequestBody BookUpdateDTO updateDTO) {
+    public ResponseEntity<Void> addMarkToBook(@PathVariable long bookId, @RequestBody @Valid BookUpdateDTO updateDTO) {
         bookService.addMarkToBook(bookId, updateDTO.getAddedMark());
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{bookId}/description")
-    public ResponseEntity<Void> updateDescriptionToBook(@PathVariable long bookId, @RequestBody BookUpdateDTO updateDTO) {
+    public ResponseEntity<Void> updateDescriptionToBook(@PathVariable long bookId, @RequestBody @Valid BookUpdateDTO updateDTO) {
         bookService.updateDescriptionToBook(bookId, updateDTO.getDescription());
         return ResponseEntity.ok().build();
     }
