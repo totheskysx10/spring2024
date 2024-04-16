@@ -77,14 +77,14 @@ public class BookController {
     }
 
     @PutMapping("/{bookId}/marks")
-    public ResponseEntity<Void> addMarkToBook(@PathVariable long bookId, @RequestParam int mark) {
-        bookService.addMarkToBook(bookId, mark);
+    public ResponseEntity<Void> addMarkToBook(@PathVariable long bookId, @RequestBody BookUpdateDTO updateDTO) {
+        bookService.addMarkToBook(bookId, updateDTO.getAddedMark());
         return ResponseEntity.ok().build();
     }
 
     @PutMapping("/{bookId}/description")
-    public ResponseEntity<Void> updateDescriptionToBook(@PathVariable long bookId, @RequestBody String desc) {
-        bookService.updateDescriptionToBook(bookId, desc);
+    public ResponseEntity<Void> updateDescriptionToBook(@PathVariable long bookId, @RequestBody BookUpdateDTO updateDTO) {
+        bookService.updateDescriptionToBook(bookId, updateDTO.getDescription());
         return ResponseEntity.ok().build();
     }
 

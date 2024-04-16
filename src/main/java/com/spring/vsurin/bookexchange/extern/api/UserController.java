@@ -24,26 +24,6 @@ public class UserController {
         this.userAssembler = userAssembler;
     }
 
-    @PostMapping
-    public ResponseEntity<UserDTO> createUser(@RequestBody UserDTO userDTO) {
-        User newUser = User.builder()
-                .username(userDTO.getUsername())
-                .gender(userDTO.getGender())
-                .email(userDTO.getEmail())
-                .mainAddress(userDTO.getMainAddress())
-                .phoneNumber(userDTO.getPhoneNumber())
-                .addressList(userDTO.getAddressList())
-                .exchangesAsMember1(new ArrayList<>())
-                .exchangesAsMember2(new ArrayList<>())
-                .library(new ArrayList<>())
-                .offeredBooks(new ArrayList<>())
-                .build();
-
-        userService.createUser(newUser);
-
-        return new ResponseEntity<>(userAssembler.toModel(newUser), HttpStatus.CREATED);
-    }
-
     @GetMapping("/{userId}")
     public ResponseEntity<UserDTO> getUserById(@PathVariable long userId) {
         User user = userService.getUserById(userId);
@@ -89,18 +69,6 @@ public class UserController {
     @DeleteMapping("/{userId}/addresses")
     public ResponseEntity<Void> removeAddressFromUser(@PathVariable long userId, @RequestBody String address) {
         userService.removeAddressFromUser(userId, address);
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping("/{userId}/phone")
-    public ResponseEntity<Void> updateUserPhone(@PathVariable long userId, @RequestBody String newPhone) {
-        userService.updateUserPhone(userId, newPhone);
-        return ResponseEntity.ok().build();
-    }
-
-    @PutMapping("/{userId}/mail")
-    public ResponseEntity<Void> updateUserMail(@PathVariable long userId, @RequestBody String newMail) {
-        userService.updateUserMail(userId, newMail);
         return ResponseEntity.ok().build();
     }
 

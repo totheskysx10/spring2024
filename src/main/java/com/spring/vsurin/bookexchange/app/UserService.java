@@ -26,28 +26,6 @@ public class UserService {
     }
 
     /**
-     * Создает нового пользователя и, если это не null, сохраняет его в базе данных.
-     * @param user объект пользователя для создания
-     * @return сохраненный пользователь
-     * @throws IllegalStateException если пользователь равен null
-     */
-    public User createUser(User user) {
-        if (user == null) {
-            throw new IllegalArgumentException("Пользователь не может быть null");
-        }
-
-        try {
-            User savedUser = userRepository.save(user);
-            log.info("Создан пользователь с id {}", savedUser.getId());
-            return savedUser;
-        } catch (Exception e) {
-            throw new RuntimeException("Ошибка при создании пользователя", e);
-        }
-    }
-
-
-
-    /**
      * Получает пользователя по его идентификатору.
      * @param userId идентификатор пользователя
      * @return найденный пользователь
@@ -107,6 +85,11 @@ public class UserService {
     public void addBookToOfferedByUser(long userId, long bookId) {
         User user = getUserById(userId);
         Book book = bookService.getBookById(bookId);
+
+        if (user.getMainAddress() == null) {
+            log.error("Нельзя предлагать книги для обмена, если не указан основной адрес доставки!");
+            return;
+        }
 
         if (book != null) {
             if (user.getLibrary().contains(book)) {
@@ -210,20 +193,6 @@ public class UserService {
             user.setPhoneNumber(newPhone);
             userRepository.save(user);
             log.info("Телефонный номер пользователя с id {} изменён на {}", userId, newPhone);
-        }
-    }
-
-    /**
-     * Обновляет адрес электронной почты пользователя.
-     * @param userId идентификатор пользователя
-     * @param newMail новый адрес электронной почты
-     */
-    public void updateUserMail(long userId, String newMail) {
-        User user = getUserById(userId);
-        if (user != null) {
-            user.setEmail(newMail);
-            userRepository.save(user);
-            log.info("Email пользователя с id {} изменён на {}", userId, newMail);
         }
     }
 

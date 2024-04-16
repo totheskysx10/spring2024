@@ -84,7 +84,7 @@ public class RequestService {
 
         if (request != null) {
             if (request.getStatus() == RequestStatus.REJECTED) {
-                log.error("Приянть заявку {} невозможно - она уже была отклонена!", requestId);
+                log.warn("Приянть заявку {} невозможно - она уже была отклонена!", requestId);
                 return;
             }
 

@@ -48,7 +48,6 @@ public class User {
      */
     @Column(name = "user_email")
     @Getter
-    @Setter
     private String email;
 
     /**
@@ -111,6 +110,5 @@ public class User {
     @Column(name = "main_address")
     @Getter
     @Setter
-    @NonNull
     private String mainAddress;
 }

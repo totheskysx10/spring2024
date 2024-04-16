@@ -20,27 +20,7 @@ public class UserServiceTest {
     private UserService userService;
 
     @Autowired
-    private BookService bookService;
-
-    @Autowired
     private ExchangeService exchangeService;
-
-    @Test
-    public void testCreateUser() {
-        userService.deleteUser(1);
-        userService.deleteUser(2);
-        userService.deleteUser(3);
-
-        User user = User.builder()
-                .username("testUser")
-                .email("test@example.com")
-                .phoneNumber("8915461564")
-                .mainAddress("")
-                .build();
-
-        User savedUser = userService.createUser(user);
-        assertNotNull(savedUser.getId());
-    }
 
     @Test
     public void testGetUserById() {
@@ -94,6 +74,18 @@ public class UserServiceTest {
         assertNotNull(updatedUser);
         assertEquals(1, updatedUser.getOfferedBooks().size());
     }
+
+    @Test
+    public void testAddBookToOfferedByUserWithoutAddress() {
+        userService.addBookToUserLibrary(3, 1);
+        userService.addBookToOfferedByUser(3, 1);
+
+        User updatedUser = userService.getUserById(3);
+
+        assertNotNull(updatedUser);
+        assertEquals(0, updatedUser.getOfferedBooks().size());
+    }
+
     @Sql("/with_exchanges.sql")
     @Test
     public void testAddBookInExchangeToOfferedByUser() {
@@ -142,28 +134,6 @@ public class UserServiceTest {
         User updatedUser = userService.getUserById(1);
         assertNotNull(updatedUser);
         assertEquals(1, updatedUser.getAddressList().size());
-    }
-
-    @Test
-    public void testUpdateUserPhone() {
-        String phone = "89123456789";
-
-        userService.updateUserPhone(1, phone);
-
-        User updatedUser = userService.getUserById(1);
-        assertNotNull(updatedUser);
-        assertEquals("89123456789", updatedUser.getPhoneNumber());
-    }
-
-    @Test
-    public void testUpdateUserMail() {
-        String email = "new@example.com";
-
-        userService.updateUserMail(1, email);
-
-        User updatedUser = userService.getUserById(1);
-        assertNotNull(updatedUser);
-        assertEquals("new@example.com", updatedUser.getEmail());
     }
 
     @Test

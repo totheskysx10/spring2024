@@ -1,4 +1,4 @@
-INSERT INTO users (user_id, user_name, user_email, user_phone) VALUES (1, 'testUser1', 'test1@example.com', '89000000000');
+INSERT INTO users (user_id, user_name, user_email, user_phone, main_address) VALUES (1, 'testUser1', 'test1@example.com', '89000000000', 'address');
 INSERT INTO users (user_id, user_name, user_email) VALUES (2, 'testUser2', 'test2@example.com');
 INSERT INTO users (user_id, user_name, user_email) VALUES (3, 'testUser3', 'test3@example.com');
 
