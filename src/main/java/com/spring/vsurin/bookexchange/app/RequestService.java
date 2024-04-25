@@ -19,11 +19,14 @@ public class RequestService {
     private final UserService userService;
     private final BookService bookService;
 
-    public RequestService(RequestRepository requestRepository, ExchangeService exchangeService, UserService userService, BookService bookService) {
+    private final EmailService emailService;
+
+    public RequestService(RequestRepository requestRepository, ExchangeService exchangeService, UserService userService, BookService bookService, EmailService emailService) {
         this.requestRepository = requestRepository;
         this.exchangeService = exchangeService;
         this.userService = userService;
         this.bookService = bookService;
+        this.emailService = emailService;
     }
 
     /**
@@ -48,6 +51,12 @@ public class RequestService {
             request.setStatus(RequestStatus.ACTUAL);
             requestRepository.save(request);
             log.info("Создана заявка с id {}", request.getId());
+            String emailReceiver = request.getReceiver().getEmail();
+            String emailSubject = "BookExchange - Заявка на обмен";
+            String emailMessage = "Вам отправлена заявка №" + request.getId() + " на обмен книгами. Отправитель хочет получить у вас книгу " +
+                    request.getBookSenderWants().getAuthor() + " - " + request.getBookSenderWants().getTitle() +
+                    ". Принять или отклонить заявку можно в приложении BookExchange.";
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
             return request;
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при создании заявки", e);
@@ -112,8 +121,13 @@ public class RequestService {
                             .build();
                     exchangeService.createExchange(exchange);
                     log.info("Заявка с id {} принята, создан обмен", requestId);
+                    String emailReceiver = relatedRequest.getSender().getEmail();
+                    String emailSubject = "BookExchange - Заявка на обмен принята";
+                    String emailMessage = "Ваша заявка №" + relatedRequest.getId() + " на обмен книгами принята. Получатель заявки выбрал у вас книгу " +
+                            relatedRequest.getBookReceiverWants().getAuthor() + " - " + relatedRequest.getBookReceiverWants().getTitle() + ".";
+                    emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
                 } else {
-                    relatedRequest.setStatus(RequestStatus.REJECTED);
+                    rejectRequest(relatedRequest.getId());
                     log.info("Заявка с id {} отклонена, так как с запрашиваемой книгой принята к обмену другая заявка", relatedRequest.getId());
                 }
                 requestRepository.save(relatedRequest);
@@ -133,6 +147,10 @@ public class RequestService {
             request.setStatus(RequestStatus.REJECTED);
             requestRepository.save(request);
             log.info("Заявка с id {} отклонена", requestId);
+            String emailReceiver = request.getSender().getEmail();
+            String emailSubject = "BookExchange - Заявка на обмен отклонена";
+            String emailMessage = "Ваша заявка №" + request.getId() + " на обмен книгами отклонена.";
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
         }
     }
 

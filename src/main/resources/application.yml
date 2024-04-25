@@ -29,6 +29,19 @@ spring:
   config:
     activate:
       on-profile: "dev"
+  mail:
+    host: smtp.mail.ru
+    port: 587
+    username:
+    password:
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          starttls:
+            enable: true
 
 ---
 spring:
@@ -41,3 +54,16 @@ spring:
   config:
     activate:
       on-profile: "prod"
+  mail:
+    host: smtp.mail.ru
+    port: 587
+    username:
+    password:
+    properties:
+      mail:
+        transport:
+          protocol: smtp
+        smtp:
+          auth: true
+          starttls:
+            enable: true

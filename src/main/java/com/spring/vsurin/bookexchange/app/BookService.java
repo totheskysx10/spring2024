@@ -2,6 +2,7 @@ package com.spring.vsurin.bookexchange.app;
 
 import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.BookGenre;
+import com.spring.vsurin.bookexchange.domain.User;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
@@ -18,9 +19,11 @@ public class BookService {
 
     private final BookRepository bookRepository;
 
+    private final UserRepository userRepository;
 
-    public BookService(BookRepository bookRepository) {
+    public BookService(BookRepository bookRepository, UserRepository userRepository) {
         this.bookRepository = bookRepository;
+        this.userRepository = userRepository;
     }
 
     /**
@@ -108,17 +111,22 @@ public class BookService {
      * @param bookId идентификатор книги
      * @param mark   оценка, которую нужно добавить
      */
-    public void addMarkToBook(long bookId, int mark) {
+    public void addMarkToBook(long bookId, int mark, long userId) {
         Book book = getBookById(bookId);
-        if (book != null) {
-            if (mark >= 1 && mark <= 10) {
-                book.addMarkToBook(mark);
-                bookRepository.save(book);
-                log.info("Оценка {} добавлена в список оценок книги с id {}", mark, bookId);
+        User user = userRepository.findById(userId);
+
+        if (user != null && book != null) {
+            if (user.getLibrary().contains(book)) {
+                if (mark >= 1 && mark <= 10) {
+                    book.addMarkToBook(mark);
+                    bookRepository.save(book);
+                    log.info("Оценка {} добавлена в список оценок книги с id {}", mark, bookId);
+                } else
+                    log.error("Оценка {} не добавлена в список оценок книги с id {} - она должна быть от 1 до 10", mark, bookId);
             } else
-                log.error("Оценка {} не добавлена в список оценок книги с id {} - она должна быть от 1 до 10", mark, bookId);
+                log.error("Оценка {} не добавлена в список оценок книги с id {}, так как пользователь {} не явл. её владельцем", mark, bookId, userId);
         } else
-            log.error("Оценка {} не добавлена в список оценок книги с id {} - книга не должна быть null", mark, bookId);
+            log.error("Оценка {} не добавлена в список оценок книги с id {} - книга и её владелец не должны быть null", mark, bookId);
     }
 
     /**

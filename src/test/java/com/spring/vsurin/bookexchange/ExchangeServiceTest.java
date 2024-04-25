@@ -1,6 +1,5 @@
 package com.spring.vsurin.bookexchange;
 
-import com.spring.vsurin.bookexchange.app.BookService;
 import com.spring.vsurin.bookexchange.app.ExchangeRepository;
 import com.spring.vsurin.bookexchange.app.ExchangeService;
 import com.spring.vsurin.bookexchange.app.UserService;
@@ -48,8 +47,8 @@ public class ExchangeServiceTest {
     @Sql("/with_exchanges.sql")
     @Test
     public void testUpdateTrackSetByUser() {
-        exchangeService.udpateTrackSetByUser(1, 1, "123");
-        exchangeService.udpateTrackSetByUser(2, 1, "1234");
+        exchangeService.updateTrackSetByUser(1, 1, "123");
+        exchangeService.updateTrackSetByUser(2, 1, "1234");
         Exchange updEx = exchangeService.getExchangeById(1);
 
         assertEquals("123", updEx.getTrack1());

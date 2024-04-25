@@ -29,7 +29,7 @@ public class ExchangeController {
 
     @PutMapping("/{exchangeId}/set-track")
     public ResponseEntity<Void> setTrackNumber(@PathVariable long exchangeId, @RequestParam long userId, @RequestParam String track) {
-        exchangeService.udpateTrackSetByUser(userId, exchangeId, track);
+        exchangeService.updateTrackSetByUser(userId, exchangeId, track);
         return ResponseEntity.ok().build();
     }
 

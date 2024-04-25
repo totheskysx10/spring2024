@@ -1,10 +1,10 @@
 package com.spring.vsurin.bookexchange;
 
-import com.spring.vsurin.bookexchange.app.BookCoverProjection;
-import com.spring.vsurin.bookexchange.app.BookRepository;
-import com.spring.vsurin.bookexchange.app.BookService;
+import com.spring.vsurin.bookexchange.app.*;
 import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.BookGenre;
+import com.spring.vsurin.bookexchange.domain.User;
+import com.spring.vsurin.bookexchange.domain.UserGender;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -26,8 +26,12 @@ public class BookServiceTest {
     @Mock
     private BookRepository bookRepository;
 
+    @Mock
+    private UserRepository userRepository;
+
     @InjectMocks
     private BookService bookService;
+
 
     @Test
     public void testCreateBook() {
@@ -145,12 +149,23 @@ public class BookServiceTest {
                 .isbn("101")
                 .publicationYear(Year.of(2010))
                 .marks(new ArrayList<>())
+                .owners(new ArrayList<>())
                 .build();
 
-        when(bookRepository.findById(1)).thenReturn(testBook);
+        User testUser = User.builder()
+                .id(1)
+                .email("test@test.ru")
+                .addressList(new ArrayList<>())
+                .library(new ArrayList<>())
+                .gender(UserGender.MALE)
+                .build();
+        testUser.getLibrary().add(testBook);
 
-        bookService.addMarkToBook(1, 5);
-        bookService.addMarkToBook(1, 7);
+        when(bookRepository.findById(1)).thenReturn(testBook);
+        when(userRepository.findById(1)).thenReturn(testUser);
+
+        bookService.addMarkToBook(1, 5, 1);
+        bookService.addMarkToBook(1, 7, 1);
 
         verify(bookRepository, times(2)).save(any(Book.class));
 
@@ -162,6 +177,46 @@ public class BookServiceTest {
         }
 
         assertEquals(2, count);
+    }
+
+    @Test
+    public void testAddMarkToBookNotInLibrary() {
+        Book testBook = Book.builder()
+                .id(1)
+                .title("Test Book 4")
+                .author("Test Author 4")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .publicationYear(Year.of(2010))
+                .marks(new ArrayList<>())
+                .owners(new ArrayList<>())
+                .build();
+
+        User testUser = User.builder()
+                .id(1)
+                .email("test@test.ru")
+                .addressList(new ArrayList<>())
+                .library(new ArrayList<>())
+                .gender(UserGender.MALE)
+                .build();
+
+        when(bookRepository.findById(1)).thenReturn(testBook);
+        when(userRepository.findById(1)).thenReturn(testUser);
+
+        bookService.addMarkToBook(1, 5, 1);
+        bookService.addMarkToBook(1, 7, 1);
+
+        verify(bookRepository, times(0)).save(any(Book.class));
+
+        Book updatedBook = bookService.getBookById(1);
+        Iterable<Integer> marks = updatedBook.getMarks();
+        int count = 0;
+        for (Integer mark : marks) {
+            count++;
+        }
+
+        assertEquals(0, count);
     }
 
     @Test

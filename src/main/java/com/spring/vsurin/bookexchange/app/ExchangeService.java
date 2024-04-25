@@ -18,11 +18,13 @@ public class ExchangeService {
     private final UserService userService;
     private final BookService bookService;
 
+    private final EmailService emailService;
 
-    public ExchangeService(ExchangeRepository exchangeRepository, UserService userService, BookService bookService) {
+    public ExchangeService(ExchangeRepository exchangeRepository, UserService userService, BookService bookService, EmailService emailService) {
         this.exchangeRepository = exchangeRepository;
         this.userService = userService;
         this.bookService = bookService;
+        this.emailService = emailService;
     }
 
     /**
@@ -74,16 +76,24 @@ public class ExchangeService {
      * @param exchangeId Идентификатор обмена.
      * @param track      Номер трека.
      */
-    public void udpateTrackSetByUser(long userId, long exchangeId, String track) {
+    public void updateTrackSetByUser(long userId, long exchangeId, String track) {
         Exchange exchange = getExchangeById(exchangeId);
 
         if (exchange.getMember1().getId() == userId) {
             exchange.setTrack1(track);
             log.info("Обмену {} присвоен трек-номер участника 1", exchange.getId());
+            String emailReceiver = exchange.getMember2().getEmail();
+            String emailSubject = "BookExchange - Присвоен трек-номер обмену";
+            String emailMessage = "Обмену книгами №" + exchange.getId() + " присвоен трек-номер: " + track + ".";
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
         }
         else if (exchange.getMember2().getId() == userId) {
             exchange.setTrack2(track);
             log.info("Обмену {} присвоен трек-номер участника 2", exchange.getId());
+            String emailReceiver = exchange.getMember1().getEmail();
+            String emailSubject = "BookExchange - Присвоен трек-номер обмену";
+            String emailMessage = "Обмену книгами №" + exchange.getId() + " присвоен трек-номер: " + track + ".";
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
         }
 
         exchangeRepository.save(exchange);
@@ -107,10 +117,18 @@ public class ExchangeService {
         if (exchange.getMember1().getId() == userId) {
             exchange.setTrack1(noTrack);
             log.info("Обмен {} доставляется без трек-номера участника 1", exchange.getId());
+            String emailReceiver = exchange.getMember2().getEmail();
+            String emailSubject = "BookExchange - Присвоен трек-номер обмену";
+            String emailMessage = "Обмен книгами №" + exchange.getId() + " доставляется без трек-номера второго участника.";
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
         }
         else if (exchange.getMember2().getId() == userId) {
             exchange.setTrack2(noTrack);
             log.info("Обмен {} доставляется без трек-номера участника 2", exchange.getId());
+            String emailReceiver = exchange.getMember1().getEmail();
+            String emailSubject = "BookExchange - Присвоен трек-номер обмену";
+            String emailMessage = "Обмен книгами №" + exchange.getId() + " доставляется без трек-номера второго участника.";
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
         }
 
         exchangeRepository.save(exchange);
@@ -132,6 +150,12 @@ public class ExchangeService {
             exchange.setStatus(ExchangeStatus.IN_PROGRESS);
             exchangeRepository.save(exchange);
             log.info("Cтатус обмена {}: в процессе доставки", exchange.getId());
+            String emailReceiver1 = exchange.getMember1().getEmail();
+            String emailReceiver2 = exchange.getMember2().getEmail();
+            String emailSubject = "BookExchange - Обмен в процессе доставки";
+            String emailMessage = "Обмен книгами №" + exchange.getId() + " в процессе доставки.";
+            emailService.sendEmail(emailReceiver1, emailSubject, emailMessage);
+            emailService.sendEmail(emailReceiver2, emailSubject, emailMessage);
         }
     }
 
@@ -158,10 +182,18 @@ public class ExchangeService {
         if (exchange.getMember1().getId() == userId) {
             exchange.setReceived1(true);
             log.info("Участник 1 получил книгу");
+            String emailReceiver = exchange.getMember2().getEmail();
+            String emailSubject = "BookExchange - Участник получил книгу";
+            String emailMessage = "Обмен книгами №" + exchange.getId() + " - второй участник получил книгу.";
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
         }
         else if (exchange.getMember2().getId() == userId) {
             exchange.setReceived2(true);
             log.info("Участник 2 получил книгу");
+            String emailReceiver = exchange.getMember1().getEmail();
+            String emailSubject = "BookExchange - Участник получил книгу";
+            String emailMessage = "Обмен книгами №" + exchange.getId() + " - второй участник получил книгу.";
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
         }
 
         exchangeRepository.save(exchange);
@@ -188,6 +220,12 @@ public class ExchangeService {
         exchange.setStatus(ExchangeStatus.COMPLETED);
         exchangeRepository.save(exchange);
         log.info("Обмен {} успешно завершён, библиотеки пользователей обновлены", exchange.getId());
+        String emailReceiver1 = exchange.getMember1().getEmail();
+        String emailReceiver2 = exchange.getMember2().getEmail();
+        String emailSubject = "BookExchange - Обмен завершён";
+        String emailMessage = "Обмен книгами №" + exchange.getId() + " успешно завершён. До встречи в BookExchange!";
+        emailService.sendEmail(emailReceiver1, emailSubject, emailMessage);
+        emailService.sendEmail(emailReceiver2, emailSubject, emailMessage);
     }
 
     /**
@@ -205,6 +243,12 @@ public class ExchangeService {
         if (currentDate.isAfter(thirtyDaysAfterDate) || currentDate.equals(thirtyDaysAfterDate)) {
             exchange.setStatus(ExchangeStatus.PROBLEMS);
             log.info("Для обмена {} установлен статус PROBLEMS", exchange.getId());
+            String emailReceiver1 = exchange.getMember1().getEmail();
+            String emailReceiver2 = exchange.getMember2().getEmail();
+            String emailSubject = "BookExchange - Проблемы при обмене";
+            String emailMessage = "В процессе обмена книгами №" + exchange.getId() + " возникли проблемы. Пожалуйста, свяжитесь с его вторым участником - контакты в приложении.";
+            emailService.sendEmail(emailReceiver1, emailSubject, emailMessage);
+            emailService.sendEmail(emailReceiver2, emailSubject, emailMessage);
         } else {
             throw new IllegalStateException("Не удалось установить статус PROBLEMS для обмена с id: " + exchangeId +
                     ", так как не прошло 30 дней с момента создания обмена.");

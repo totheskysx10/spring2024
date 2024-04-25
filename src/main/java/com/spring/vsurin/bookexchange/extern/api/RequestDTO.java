@@ -21,10 +21,8 @@ public class RequestDTO extends RepresentationModel<RequestDTO> {
     @Positive
     private long bookSenderWantsId;
 
-    @Positive
     private long bookReceiverWantsId;
 
-    @NotNull
     private RequestStatus status;
 
     @Size(max = 300)
