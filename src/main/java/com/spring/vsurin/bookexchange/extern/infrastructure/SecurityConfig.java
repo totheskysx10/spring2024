@@ -10,8 +10,9 @@ import org.springframework.security.config.annotation.web.configuration.EnableWe
 import org.springframework.security.web.SecurityFilterChain;
 
 /**
- * Конфигурация Spring Security для профиля prod - доступ без авторизации
- * возможен только к "/users".
+ * Конфигурация Spring Security для профиля prod - c ограничениями доступа
+ * только для аутентифицированных пользователей, а к некоторым эндпойнтам -
+ * только для админов.
  */
 @Slf4j
 @Configuration
@@ -23,12 +24,17 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
+                        .requestMatchers("/users/delete/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/books/delete/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/users/admin/**").hasAuthority("ROLE_ADMIN")
+                        .requestMatchers("/users/no-admin/**").hasAuthority("ROLE_ADMIN")
                         .anyRequest().authenticated()
                 )
                 .oauth2Login(Customizer.withDefaults())
                 .csrf((csrf) -> csrf.disable());
         SecurityFilterChain filterChain = http.build();
         log.info("Security filter chain configured successfully");
+
         return filterChain;
     }
 }

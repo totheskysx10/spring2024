@@ -14,6 +14,7 @@ import java.util.List;
 @Repository
 public interface BookRepository extends JpaRepository<Book, Long> {
     Book findById(long id);
+    void deleteById(long id);
     Page<Book> findByGenre(BookGenre genre, Pageable pageable);
     List<Book> findByTitleAndAuthorIgnoreCase(String title, String author);
     Page<Book> findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(String title, String author, Pageable pageable);

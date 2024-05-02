@@ -4,11 +4,9 @@ import com.spring.vsurin.bookexchange.app.UserService;
 import com.spring.vsurin.bookexchange.domain.Exchange;
 import com.spring.vsurin.bookexchange.domain.User;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-import java.util.ArrayList;
 import java.util.List;
 
 @RestController
@@ -30,9 +28,15 @@ public class UserController {
         return ResponseEntity.ok(userAssembler.toModel(user));
     }
 
-    @DeleteMapping("/{userId}")
+    @DeleteMapping("/delete/{userId}")
     public ResponseEntity<Void> deleteUser(@PathVariable long userId) {
         userService.deleteUser(userId);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PostMapping("/request-delete/{userId}")
+    public ResponseEntity<Void> sendRequestToDeleteUser(@PathVariable long userId, @RequestBody String reason) {
+        userService.sendRequestToDeleteUser(userId, reason);
         return ResponseEntity.noContent().build();
     }
 
@@ -82,5 +86,17 @@ public class UserController {
     public ResponseEntity<List<Exchange>> getAllUserExchanges(@PathVariable long userId) {
         List<Exchange> userExchanges = userService.getAllUserExchanges(userId);
         return ResponseEntity.ok(userExchanges);
+    }
+
+    @PutMapping("/admin/{userId}")
+    public ResponseEntity<Void> setAdminStatus(@PathVariable long userId) {
+        userService.setAdminStatus(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/no-admin/{userId}")
+    public ResponseEntity<Void> removeAdminStatus(@PathVariable long userId) {
+        userService.removeAdminStatus(userId);
+        return ResponseEntity.ok().build();
     }
 }

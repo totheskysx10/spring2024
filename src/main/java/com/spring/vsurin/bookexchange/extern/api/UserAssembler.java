@@ -41,6 +41,7 @@ public class UserAssembler extends RepresentationModelAssemblerSupport<User, Use
                 .map(Exchange::getId)
                 .collect(Collectors.toList()));
         userDTO.setMainAddress(user.getMainAddress());
+        userDTO.setRole(user.getRole());
 
         userDTO.add(linkTo(methodOn(UserController.class).getUserById(user.getId())).withSelfRel());
 

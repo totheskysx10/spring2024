@@ -1,9 +1,6 @@
 package com.spring.vsurin.bookexchange.app;
 
-import com.spring.vsurin.bookexchange.domain.Book;
-import com.spring.vsurin.bookexchange.domain.Exchange;
-import com.spring.vsurin.bookexchange.domain.ExchangeStatus;
-import com.spring.vsurin.bookexchange.domain.User;
+import com.spring.vsurin.bookexchange.domain.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -19,10 +16,13 @@ public class UserService {
     private final UserRepository userRepository;
     private final BookService bookService;
 
+    private final EmailService emailService;
 
-    public UserService(UserRepository userRepository, BookService bookService) {
+
+    public UserService(UserRepository userRepository, BookService bookService, EmailService emailService) {
         this.userRepository = userRepository;
         this.bookService = bookService;
+        this.emailService = emailService;
     }
 
     /**
@@ -42,7 +42,7 @@ public class UserService {
     }
 
     /**
-     * Удаляет пользователя из базы данных по его идентификатору.
+     * Удаляет пользователя из базы данных по его идентификатору, отправляет уведомление.
      * @param userId идентификатор пользователя для удаления
      */
     public void deleteUser(long userId) {
@@ -50,8 +50,35 @@ public class UserService {
         if (foundUser == null) {
             throw new IllegalArgumentException("Пользователь с id " + userId + " не найден");
         } else {
+            String emailSubject = "Аккаунт удалён";
+            String emailMessage = "Добрый день! Удалён аккаунт пользователя с id " + userId;
+            String emailReceiver = foundUser.getEmail();
+            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
+
             userRepository.deleteById(userId);
             log.info("Удалён пользователь с id {}", userId);
+        }
+    }
+
+    /**
+     * Отправляет администраторам запрос на удаление пользователя.
+     * @param userId идентификатор пользователя для удаления
+     * @param reason причина удаления
+     */
+    public void sendRequestToDeleteUser(long userId, String reason) {
+        User foundUser = userRepository.findById(userId);
+        if (foundUser == null) {
+            throw new IllegalArgumentException("Пользователь с id " + userId + " не найден");
+        } else {
+            List<User> adminList = userRepository.findByRole(UserRole.ROLE_ADMIN);
+
+            String emailSubject = "Просьба удалить аккаунт";
+            String emailMessage = "Добрый день! Прошу удалить мой аккаунт пользователя с id " + userId + ". Причина удаления: " + reason;
+
+            adminList.stream()
+                    .map(User::getEmail)
+                    .forEach(emailReceiver -> emailService.sendEmail(emailReceiver, emailSubject, emailMessage));
+
         }
     }
 
@@ -222,5 +249,37 @@ public class UserService {
         combinedList.addAll(ex2);
 
         return combinedList;
+    }
+
+    /**
+     * Назначает пользователя администратором.
+     * @param userId идентификатор пользователя
+     */
+    public void setAdminStatus(long userId) {
+        User user = getUserById(userId);
+        if (user != null) {
+            if (user.getRole() != UserRole.ROLE_ADMIN) {
+                user.setRole(UserRole.ROLE_ADMIN);
+                userRepository.save(user);
+                log.info("Пользователь с id {} назначен администратором", userId);
+            } else
+                log.warn("Пользователь с id {} уже администратор!", userId);
+        }
+    }
+
+    /**
+     * Удаляет у пользователя права администратора.
+     * @param userId идентификатор пользователя
+     */
+    public void removeAdminStatus(long userId) {
+        User user = getUserById(userId);
+        if (user != null) {
+            if (user.getRole() == UserRole.ROLE_ADMIN) {
+                user.setRole(UserRole.ROLE_USER);
+                userRepository.save(user);
+                log.info("Пользователь с id {} больше не администратор", userId);
+            } else
+                log.warn("Пользователь с id {} не администратор!", userId);
+        }
     }
 }

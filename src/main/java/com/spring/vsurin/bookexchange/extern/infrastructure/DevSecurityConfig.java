@@ -23,6 +23,7 @@ public class DevSecurityConfig {
                 .authorizeHttpRequests((authorize) -> authorize
                         .anyRequest().permitAll()
                 )
+
                 .csrf((csrf) -> csrf.disable());
         SecurityFilterChain filterChain = http.build();
         log.info("Security filter chain configured successfully");

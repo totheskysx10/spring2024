@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.test.context.jdbc.Sql;
 
 import java.time.Year;
 import java.util.ArrayList;
@@ -67,6 +68,27 @@ public class BookServiceTest {
         Book retrievedBook = bookService.getBookById(1);
         assertNotNull(retrievedBook);
         assertEquals(1, retrievedBook.getId());
+    }
+
+    @Test
+    public void testDeleteBookById() {
+        Book testBook = Book.builder()
+                .id(1)
+                .title("Test Book 4")
+                .author("Test Author 4")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .publicationYear(Year.of(2010))
+                .build();
+
+        bookRepository.save(testBook);
+
+        when(bookRepository.findById(1)).thenReturn(testBook);
+
+        bookService.deleteBook(1);
+
+        verify(bookRepository, times(1)).deleteById(1);
     }
 
     @Test

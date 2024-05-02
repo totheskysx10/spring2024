@@ -68,6 +68,20 @@ public class BookService {
     }
 
     /**
+     * Удаляет книгу из базы данных по её идентификатору.
+     * @param bookId идентификатор книги для удаления
+     */
+    public void deleteBook(long bookId) {
+        Book foundBook = bookRepository.findById(bookId);
+        if (foundBook == null) {
+            throw new IllegalArgumentException("Книга с id " + bookId + " не найдена");
+        } else {
+            bookRepository.deleteById(bookId);
+            log.info("Удалена книга с id {}", bookId);
+        }
+    }
+
+    /**
      * Возвращает все книги, которые есть в базе, с пагинацией.
      * @return все книги, по страницам
      */

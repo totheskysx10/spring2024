@@ -1,6 +1,7 @@
 package com.spring.vsurin.bookexchange.extern.api;
 
 import com.spring.vsurin.bookexchange.domain.UserGender;
+import com.spring.vsurin.bookexchange.domain.UserRole;
 import jakarta.validation.constraints.*;
 import lombok.Data;
 import org.springframework.hateoas.RepresentationModel;
@@ -35,6 +36,9 @@ public class UserDTO extends RepresentationModel<UserDTO> {
     private List<Long> exchangesIdsAsMember1;
 
     private List<Long> exchangesIdsAsMember2;
+
+    @NotNull
+    private UserRole role;
 
     @Size(min = 50)
     private String mainAddress;

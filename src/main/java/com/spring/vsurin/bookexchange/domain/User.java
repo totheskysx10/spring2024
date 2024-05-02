@@ -111,4 +111,14 @@ public class User {
     @Getter
     @Setter
     private String mainAddress;
+
+    /**
+     * Роль пользователя.
+     */
+    @Enumerated(EnumType.STRING)
+    @Column(name = "user_role")
+    @Getter
+    @Setter
+    @NonNull
+    private UserRole role;
 }

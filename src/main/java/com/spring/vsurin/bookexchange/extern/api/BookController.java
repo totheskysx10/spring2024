@@ -53,6 +53,12 @@ public class BookController {
         return ResponseEntity.ok(bookAssembler.toModel(book));
     }
 
+    @DeleteMapping("/delete/{bookId}")
+    public ResponseEntity<Void> deleteBook(@PathVariable long bookId) {
+        bookService.deleteBook(bookId);
+        return ResponseEntity.noContent().build();
+    }
+
     @GetMapping
     public ResponseEntity<Page<BookDTO>> getAllBooks(Pageable pageable) {
         Page<BookDTO> booksPage = bookService.getAllBooksInBase(pageable).map(bookAssembler::toModel);

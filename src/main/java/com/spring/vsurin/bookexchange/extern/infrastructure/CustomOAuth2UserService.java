@@ -4,17 +4,20 @@ import com.spring.vsurin.bookexchange.app.UserRepository;
 import com.spring.vsurin.bookexchange.app.UserService;
 import com.spring.vsurin.bookexchange.domain.User;
 import com.spring.vsurin.bookexchange.domain.UserGender;
+import com.spring.vsurin.bookexchange.domain.UserRole;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.security.core.GrantedAuthority;
+import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.oauth2.client.userinfo.DefaultOAuth2UserService;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.core.OAuth2AuthenticationException;
+import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-import java.util.ArrayList;
-import java.util.LinkedHashMap;
-import java.util.Objects;
+
+import java.util.*;
 
 @Slf4j
 @Component
@@ -62,6 +65,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             userService.updateUserPhone(user.getId(), phoneNumber);
         }
 
+        oAuth2User = setRole(oAuth2User, user.getRole().toString());
+
         return oAuth2User;
     }
 
@@ -98,8 +103,16 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .exchangesAsMember2(new ArrayList<>())
                 .library(new ArrayList<>())
                 .offeredBooks(new ArrayList<>())
+                .role(UserRole.ROLE_USER)
                 .build();
 
         return newUser;
+    }
+
+    private OAuth2User setRole(OAuth2User user, String role) {
+        Map<String, Object> attributes = new HashMap<>(user.getAttributes());
+        attributes.put("authorities", role);
+        Collection<? extends GrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority(role));
+        return new DefaultOAuth2User(authorities, attributes, "default_email");
     }
 }
