@@ -2,11 +2,9 @@ package com.spring.vsurin.bookexchange;
 
 import com.spring.vsurin.bookexchange.app.ComplaintService;
 import com.spring.vsurin.bookexchange.app.EmailService;
+import com.spring.vsurin.bookexchange.app.MailBuilder;
 import com.spring.vsurin.bookexchange.app.UserRepository;
-import com.spring.vsurin.bookexchange.domain.ComplaintSubject;
-import com.spring.vsurin.bookexchange.domain.User;
-import com.spring.vsurin.bookexchange.domain.UserGender;
-import com.spring.vsurin.bookexchange.domain.UserRole;
+import com.spring.vsurin.bookexchange.domain.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -30,6 +28,9 @@ public class ComplaintServiceTest {
 
     @Mock
     private EmailService emailService;
+
+    @Mock
+    private MailBuilder mailBuilder;
 
     @Test
     public void testSendComplaint() {
@@ -63,6 +64,8 @@ public class ComplaintServiceTest {
 
         when(userRepository.findByRole(UserRole.ROLE_ADMIN)).thenReturn(admins);
         when(userRepository.findById(3)).thenReturn(user);
+        when(mailBuilder.buildSendComplaintMessage(anyString(), anyLong(), anyString(), anyString()))
+                .thenReturn(new EmailData("min095@list.ru", "Subject", "Message"));
 
         complaintService.sendComplaint(ComplaintSubject.BOOK, 10, anyString());
 

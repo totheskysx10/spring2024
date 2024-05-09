@@ -2,7 +2,6 @@ package com.spring.vsurin.bookexchange.extern.api;
 
 import com.spring.vsurin.bookexchange.app.RequestService;
 import com.spring.vsurin.bookexchange.domain.Request;
-import com.spring.vsurin.bookexchange.domain.RequestStatus;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
 import org.springframework.stereotype.Component;
 

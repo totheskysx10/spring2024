@@ -15,13 +15,14 @@ import java.util.List;
 public class UserService {
     private final UserRepository userRepository;
     private final BookService bookService;
-
+    private final MailBuilder mailBuilder;
     private final EmailService emailService;
 
 
-    public UserService(UserRepository userRepository, BookService bookService, EmailService emailService) {
+    public UserService(UserRepository userRepository, BookService bookService, MailBuilder mailBuilder, EmailService emailService) {
         this.userRepository = userRepository;
         this.bookService = bookService;
+        this.mailBuilder = mailBuilder;
         this.emailService = emailService;
     }
 
@@ -50,10 +51,8 @@ public class UserService {
         if (foundUser == null) {
             throw new IllegalArgumentException("Пользователь с id " + userId + " не найден");
         } else {
-            String emailSubject = "Аккаунт удалён";
-            String emailMessage = "Добрый день! Удалён аккаунт пользователя с id " + userId;
-            String emailReceiver = foundUser.getEmail();
-            emailService.sendEmail(emailReceiver, emailSubject, emailMessage);
+            EmailData emailData = mailBuilder.buildDeleteUserMessage(foundUser.getEmail(), userId);
+            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
 
             userRepository.deleteById(userId);
             log.info("Удалён пользователь с id {}", userId);
@@ -72,12 +71,10 @@ public class UserService {
         } else {
             List<User> adminList = userRepository.findByRole(UserRole.ROLE_ADMIN);
 
-            String emailSubject = "Просьба удалить аккаунт";
-            String emailMessage = "Добрый день! Прошу удалить мой аккаунт пользователя с id " + userId + ". Причина удаления: " + reason;
-
-            adminList.stream()
-                    .map(User::getEmail)
-                    .forEach(emailReceiver -> emailService.sendEmail(emailReceiver, emailSubject, emailMessage));
+            adminList.forEach(admin -> {
+                EmailData emailData = mailBuilder.buildRequestToDeleteUserMessage(admin.getEmail(), userId, reason);
+                emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            });
 
         }
     }
@@ -164,18 +161,30 @@ public class UserService {
 
     /**
      * Удаляет книгу из библиотеки пользователя.
+     * Проверяет, не принимает ли эта книга участие в обмене в данный момент.
      * @param userId идентификатор пользователя
      * @param bookId идентификатор книги для удаления
      */
     public void removeBookFromUserLibrary(long userId, long bookId) {
         User user = getUserById(userId);
         Book book = bookService.getBookById(bookId);
-        List<Book> l = user.getLibrary();
 
         if (user.getLibrary().contains(book)) {
-            user.getLibrary().remove(book);
-            userRepository.save(user);
-            log.info("Книга с id {} удалена из библиотеки пользователя с id {}", bookId, userId);
+            List<Exchange> allUserExchanges = getAllUserExchanges(userId);
+
+            boolean bookInExchange = allUserExchanges.stream()
+                    .anyMatch(ex -> ex.getStatus() == ExchangeStatus.CONFIRMED ||
+                            ex.getStatus() == ExchangeStatus.IN_PROGRESS ||
+                            ex.getStatus() == ExchangeStatus.PROBLEMS &&
+                                    (ex.getExchangedBook1().getId() == bookId || ex.getExchangedBook2().getId() == bookId));
+
+            if (!bookInExchange) {
+                user.getLibrary().remove(book);
+                userRepository.save(user);
+                log.info("Книга с id {} удалена из библиотеки пользователя с id {}", bookId, userId);
+            } else {
+                log.error("Книга с id {} не удалена из библиотеки пользователя с id {}! Она принимает участие в обмене!", bookId, userId);
+            }
         }
     }
 
@@ -224,6 +233,20 @@ public class UserService {
     }
 
     /**
+     * Обновляет ссылку на аватар пользователя.
+     * @param userId идентификатор пользователя
+     * @param newLink новая ссылка
+     */
+    public void updateUserAvatarLink(long userId, String newLink) {
+        User user = getUserById(userId);
+        if (user != null) {
+            user.setAvatarLink(newLink);
+            userRepository.save(user);
+            log.info("Ссылка на аватар пользователя с id {} изменена", userId);
+        }
+    }
+
+    /**
      * Обновляет основной адрес доставки пользователя.
      * @param userId идентификатор пользователя
      * @param index новый адрес доставки из списка адресов
@@ -257,14 +280,19 @@ public class UserService {
      */
     public void setAdminStatus(long userId) {
         User user = getUserById(userId);
-        if (user != null) {
-            if (user.getRole() != UserRole.ROLE_ADMIN) {
-                user.setRole(UserRole.ROLE_ADMIN);
-                userRepository.save(user);
-                log.info("Пользователь с id {} назначен администратором", userId);
-            } else
-                log.warn("Пользователь с id {} уже администратор!", userId);
+        if (user == null) {
+            log.error("Пользователь с id {} не найден", userId);
+            return;
         }
+
+        if (user.getRole() == UserRole.ROLE_ADMIN) {
+            log.warn("Пользователь с id {} уже является администратором", userId);
+            return;
+        }
+
+        user.setRole(UserRole.ROLE_ADMIN);
+        userRepository.save(user);
+        log.info("Пользователь с id {} назначен администратором", userId);
     }
 
     /**
@@ -273,13 +301,77 @@ public class UserService {
      */
     public void removeAdminStatus(long userId) {
         User user = getUserById(userId);
+        if (user == null) {
+            log.error("Пользователь с id {} не найден", userId);
+            return;
+        }
+
+        if (user.getRole() != UserRole.ROLE_ADMIN) {
+            log.warn("Пользователь с id {} не является администратором", userId);
+            return;
+        }
+
+        user.setRole(UserRole.ROLE_USER);
+        userRepository.save(user);
+        log.info("Пользователь с id {} больше не администратор", userId);
+    }
+
+
+    /**
+     * Разрешает доступ к контактоам пользователя.
+     * @param userId идентификатор пользователя
+     */
+    public void enableShowContacts(long userId) {
+        User user = getUserById(userId);
+        if (user == null) {
+            log.error("Пользователь с id {} не найден", userId);
+            return;
+        }
+
+        if (user.isShowContacts()) {
+            log.warn("Доступ к контактам уже был разрешен для пользователя с id {}", userId);
+            return;
+        }
+
+        user.setShowContacts(true);
+        userRepository.save(user);
+        log.info("Доступ к контактам разрешен для пользователя с id {}", userId);
+    }
+
+
+    /**
+     * Запрещает доступ к контактоам пользователя.
+     * @param userId идентификатор пользователя
+     */
+    public void disableShowContacts(long userId) {
+        User user = getUserById(userId);
+        if (user == null) {
+            log.error("Пользователь с id {} не найден", userId);
+            return;
+        }
+
+        if (!user.isShowContacts()) {
+            log.warn("Доступ к контактам уже был запрещён для пользователя с id {}", userId);
+            return;
+        }
+
+        user.setShowContacts(false);
+        userRepository.save(user);
+        log.info("Доступ к контактам запрещён для пользователя с id {}", userId);
+    }
+
+    /**
+     * Обновляет предпочтения пользователя с указанным идентификатором.
+     *
+     * @param userId идентификатор пользователя
+     * @param prefs  предпочтения
+     */
+    public void updatePreferencesToUser(long userId, String prefs) {
+        User user = getUserById(userId);
         if (user != null) {
-            if (user.getRole() == UserRole.ROLE_ADMIN) {
-                user.setRole(UserRole.ROLE_USER);
-                userRepository.save(user);
-                log.info("Пользователь с id {} больше не администратор", userId);
-            } else
-                log.warn("Пользователь с id {} не администратор!", userId);
+            user.setPreferences(prefs);
+            userRepository.save(user);
+            log.info("Предпочтения обновлены для пользователя с id {}", userId);
         }
     }
 }

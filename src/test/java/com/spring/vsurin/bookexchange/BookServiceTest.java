@@ -1,10 +1,7 @@
 package com.spring.vsurin.bookexchange;
 
 import com.spring.vsurin.bookexchange.app.*;
-import com.spring.vsurin.bookexchange.domain.Book;
-import com.spring.vsurin.bookexchange.domain.BookGenre;
-import com.spring.vsurin.bookexchange.domain.User;
-import com.spring.vsurin.bookexchange.domain.UserGender;
+import com.spring.vsurin.bookexchange.domain.*;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -12,7 +9,6 @@ import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
-import org.springframework.test.context.jdbc.Sql;
 
 import java.time.Year;
 import java.util.ArrayList;
@@ -180,6 +176,7 @@ public class BookServiceTest {
                 .addressList(new ArrayList<>())
                 .library(new ArrayList<>())
                 .gender(UserGender.MALE)
+                .role(UserRole.ROLE_ADMIN)
                 .build();
         testUser.getLibrary().add(testBook);
 
@@ -198,6 +195,7 @@ public class BookServiceTest {
             count++;
         }
 
+        assertEquals(6, updatedBook.getRating());
         assertEquals(2, count);
     }
 
@@ -221,6 +219,7 @@ public class BookServiceTest {
                 .addressList(new ArrayList<>())
                 .library(new ArrayList<>())
                 .gender(UserGender.MALE)
+                .role(UserRole.ROLE_ADMIN)
                 .build();
 
         when(bookRepository.findById(1)).thenReturn(testBook);

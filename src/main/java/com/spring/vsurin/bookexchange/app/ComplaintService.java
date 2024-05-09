@@ -1,6 +1,7 @@
 package com.spring.vsurin.bookexchange.app;
 
 import com.spring.vsurin.bookexchange.domain.ComplaintSubject;
+import com.spring.vsurin.bookexchange.domain.EmailData;
 import com.spring.vsurin.bookexchange.domain.User;
 import com.spring.vsurin.bookexchange.domain.UserRole;
 import org.springframework.stereotype.Component;
@@ -15,10 +16,12 @@ public class ComplaintService {
 
     private final EmailService emailService;
     private final UserRepository userRepository;
+    private final MailBuilder mailBuilder;
 
-    public ComplaintService(EmailService emailService, UserRepository userRepository) {
+    public ComplaintService(EmailService emailService, UserRepository userRepository, MailBuilder mailBuilder) {
         this.emailService = emailService;
         this.userRepository = userRepository;
+        this.mailBuilder = mailBuilder;
     }
 
     /**
@@ -45,14 +48,10 @@ public class ComplaintService {
                 break;
         }
 
-        String emailSubject = "Жалоба от пользователя";
-        String emailMessage = "Предмет жалобы: " + stringComplaintSubject + "\n" +
-                "Id предмета жалобы: " + subjectId + "\n" +
-                "Текст жалобы: " + complaint;
-
-
-        adminList.stream()
-                .map(User::getEmail)
-                .forEach(emailReceiver -> emailService.sendEmail(emailReceiver, emailSubject, emailMessage));
+        String finalStringComplaintSubject = stringComplaintSubject;
+        adminList.forEach(admin -> {
+            EmailData emailData = mailBuilder.buildSendComplaintMessage(admin.getEmail(), subjectId, finalStringComplaintSubject, complaint);
+            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+        });
     }
 }

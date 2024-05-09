@@ -19,7 +19,7 @@ public interface BookRepository extends JpaRepository<Book, Long> {
     List<Book> findByTitleAndAuthorIgnoreCase(String title, String author);
     Page<Book> findByTitleContainingIgnoreCaseOrAuthorContainingIgnoreCase(String title, String author, Pageable pageable);
 
-    @Query("SELECT b FROM Book b WHERE SIZE(b.usersOfferingForExchange) > 0")
+    @Query("SELECT b FROM Book b WHERE SIZE(b.usersOfferingForExchange) > 0 ORDER BY b.rating DESC")
     Page<Book> findBooksWithUsersOfferingForExchange(Pageable pageable);
 
     BookCoverProjection findCoverImageById(long bookId);

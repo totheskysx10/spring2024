@@ -2,6 +2,7 @@ package com.spring.vsurin.bookexchange.domain;
 
 import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.util.List;
 
@@ -16,6 +17,7 @@ import java.util.List;
 @NoArgsConstructor
 @EqualsAndHashCode(onlyExplicitlyIncluded = true)
 @Builder
+@Slf4j
 public class User {
     /**
      * Уникальный идентификатор пользователя в базе.
@@ -86,7 +88,6 @@ public class User {
      * Номер телефона пользователя.
      */
     @Column(name = "user_phone")
-    @Getter
     @Setter
     private String phoneNumber;
 
@@ -121,4 +122,40 @@ public class User {
     @Setter
     @NonNull
     private UserRole role;
+
+    /**
+     * Разрешение на получение контактных данных пользователя.
+     */
+    @Column(name = "user_show_contacts")
+    @Getter
+    @Setter
+    private boolean showContacts;
+
+    /**
+     * Ссылка на аватар пользователя.
+     */
+    @Column(name = "user_avatar")
+    @Getter
+    @Setter
+    private String avatarLink;
+
+    /**
+     * Предпочтения пользователя.
+     */
+    @Column(name = "user_preferences")
+    @Getter
+    @Setter
+    private String preferences;
+
+    /**
+     * Возвращает телефон пользователя, если разрешено
+     */
+    public String getPhoneNumber() {
+        if (showContacts) {
+            return phoneNumber;
+        } else {
+            log.warn("Пользователь с id {} скрыл контакты!", id);
+            return null;
+        }
+    }
 }

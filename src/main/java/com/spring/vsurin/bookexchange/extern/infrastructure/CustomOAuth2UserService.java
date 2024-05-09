@@ -16,7 +16,6 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
-
 import java.util.*;
 
 @Slf4j
@@ -35,8 +34,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     /**
      * Загружает данные пользователя из OAuth2UserRequest,
      * создаёт нового пользователя, если он заходит впервые.
-     * Если пользователь в аккаунте яндекса поменял номер телефона,
-     * то он обновится и при авторизации в приложении.
+     * Если пользователь в аккаунте яндекса поменял номер телефона или аватар,
+     * то они обновятся и при авторизации в приложении.
      *
      * @param userRequest Запрос OAuth2User, содержащий данные пользователя.
      * @return Объект OAuth2User, представляющий аутентифицированного пользователя.
@@ -49,6 +48,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email = (String) oAuth2User.getAttributes().get("default_email");
         LinkedHashMap<String, Object> defaultPhoneAttributes = (LinkedHashMap<String, Object>) oAuth2User.getAttribute("default_phone");
         String phoneNumber = (String) defaultPhoneAttributes.get("number");
+        String avatarLink = getAvatarLinkFromYandex(oAuth2User);
 
         User user = userRepository.findByEmail(email);
 
@@ -60,9 +60,17 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             } catch (Exception e) {
                 throw new RuntimeException("Ошибка при создании пользователя", e);
             }
-        }
-        else if (!Objects.equals(user.getPhoneNumber(), phoneNumber)) {
-            userService.updateUserPhone(user.getId(), phoneNumber);
+        } else {
+            if (!user.isShowContacts()) {
+                userService.enableShowContacts(user.getId());
+                User userToUpdate = userRepository.findById(user.getId());
+                if (!Objects.equals(userToUpdate.getPhoneNumber(), phoneNumber))
+                    userService.updateUserPhone(user.getId(), phoneNumber);
+                userService.disableShowContacts(user.getId());
+            }
+
+            if (!Objects.equals(user.getAvatarLink(), avatarLink))
+                userService.updateUserAvatarLink(user.getId(), avatarLink);
         }
 
         oAuth2User = setRole(oAuth2User, user.getRole().toString());
@@ -81,6 +89,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         LinkedHashMap<String, Object> defaultPhoneAttributes = (LinkedHashMap<String, Object>) oAuth2User.getAttribute("default_phone");
         String phoneNumber = (String) defaultPhoneAttributes.get("number");
         String gender = oAuth2User.getAttribute("sex");
+        String avatarLink = getAvatarLinkFromYandex(oAuth2User);
 
         UserGender genderValue = null;
 
@@ -104,6 +113,8 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .library(new ArrayList<>())
                 .offeredBooks(new ArrayList<>())
                 .role(UserRole.ROLE_USER)
+                .showContacts(false)
+                .avatarLink(avatarLink)
                 .build();
 
         return newUser;
@@ -114,5 +125,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         attributes.put("authorities", role);
         Collection<? extends GrantedAuthority> authorities = Arrays.asList(new SimpleGrantedAuthority(role));
         return new DefaultOAuth2User(authorities, attributes, "default_email");
+    }
+
+    private String getAvatarLinkFromYandex(OAuth2User oAuth2User) {
+        boolean isAvatarEmpty = (boolean) oAuth2User.getAttributes().get("is_avatar_empty");
+        String avatarLink;
+
+        if (!isAvatarEmpty) {
+            String avatarId = (String) oAuth2User.getAttributes().get("default_avatar_id");
+            avatarLink = "https://avatars.yandex.net/get-yapic/" + avatarId + "/islands-200";
+        }
+        else
+            avatarLink = "DEFAULT BOOKEXCHANGE AVATAR LINK";
+
+        return avatarLink;
     }
 }

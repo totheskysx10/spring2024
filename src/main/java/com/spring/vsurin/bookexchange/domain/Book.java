@@ -3,6 +3,8 @@ package com.spring.vsurin.bookexchange.domain;
 import jakarta.persistence.*;
 import lombok.*;
 
+import java.text.DecimalFormat;
+import java.text.DecimalFormatSymbols;
 import java.time.Year;
 import java.util.List;
 
@@ -108,6 +110,15 @@ public class Book {
     @Setter
     private byte[] coverImage;
 
+
+    /**
+     * Рейтинг книги.
+     */
+    @Column(name = "book_rating")
+    @Getter
+    @Setter
+    private double rating;
+
     /**
      * Возвращает итератор для оценок книги.
      *
@@ -132,11 +143,17 @@ public class Book {
                 sum += mark;
             }
             result = sum / marks.size();
+
+        DecimalFormatSymbols symbols = DecimalFormatSymbols.getInstance();
+        symbols.setDecimalSeparator('.');
+        DecimalFormat df = new DecimalFormat("#.##", symbols);
+        result = Double.parseDouble(df.format(result));
+
         return result;
     }
 
     /**
-     * Добавляет оценку книге.
+     * Добавляет оценку книге, обновляет рейтинг.
      *
      * @param mark   оценка, которую нужно добавить
      */
@@ -144,5 +161,6 @@ public class Book {
         if (mark >= 1 && mark <= 10) {
             marks.add(mark);
         }
+        rating = calculateBookRating();
     }
 }

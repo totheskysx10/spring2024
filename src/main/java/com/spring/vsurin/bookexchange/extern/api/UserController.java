@@ -3,6 +3,7 @@ package com.spring.vsurin.bookexchange.extern.api;
 import com.spring.vsurin.bookexchange.app.UserService;
 import com.spring.vsurin.bookexchange.domain.Exchange;
 import com.spring.vsurin.bookexchange.domain.User;
+import jakarta.validation.Valid;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -11,6 +12,7 @@ import java.util.List;
 
 @RestController
 @RequestMapping("/users")
+@CrossOrigin(origins = "http://localhost:8080")
 public class UserController {
 
     private final UserService userService;
@@ -97,6 +99,24 @@ public class UserController {
     @PutMapping("/no-admin/{userId}")
     public ResponseEntity<Void> removeAdminStatus(@PathVariable long userId) {
         userService.removeAdminStatus(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/enable-show-contacts/{userId}")
+    public ResponseEntity<Void> enableShowContacts(@PathVariable long userId) {
+        userService.enableShowContacts(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/disable-show-contacts/{userId}")
+    public ResponseEntity<Void> disableShowContacts(@PathVariable long userId) {
+        userService.disableShowContacts(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{userId}/preferences")
+    public ResponseEntity<Void> updatePreferencesToUser(@PathVariable long userId, @RequestBody @Valid UserUpdateDTO updateDTO) {
+        userService.updatePreferencesToUser(userId, updateDTO.getPreferences());
         return ResponseEntity.ok().build();
     }
 }

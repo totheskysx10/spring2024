@@ -1,5 +1,6 @@
 package com.spring.vsurin.bookexchange;
 
+import com.spring.vsurin.bookexchange.app.EmailService;
 import com.spring.vsurin.bookexchange.app.ExchangeRepository;
 import com.spring.vsurin.bookexchange.app.ExchangeService;
 import com.spring.vsurin.bookexchange.app.UserService;
@@ -9,11 +10,16 @@ import com.spring.vsurin.bookexchange.domain.User;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.test.context.jdbc.Sql;
 
+import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.anyString;
+import static org.mockito.Mockito.times;
+import static org.mockito.Mockito.verify;
 
 @SpringBootTest
 public class ExchangeServiceTest {
@@ -26,6 +32,9 @@ public class ExchangeServiceTest {
 
     @Autowired
     private ExchangeRepository exchangeRepository;
+
+    @MockBean
+    private EmailService emailService;
 
     @Sql("/with_exchanges.sql")
     @Test
@@ -50,6 +59,7 @@ public class ExchangeServiceTest {
         exchangeService.updateTrackSetByUser(1, 1, "123");
         exchangeService.updateTrackSetByUser(2, 1, "1234");
         Exchange updEx = exchangeService.getExchangeById(1);
+        verify(emailService, times(4)).sendEmail(anyString(), anyString(), anyString());
 
         assertEquals("123", updEx.getTrack1());
         assertEquals("1234", updEx.getTrack2());
@@ -61,6 +71,7 @@ public class ExchangeServiceTest {
         exchangeService.setNoTrack(1, 1);
         exchangeService.setNoTrack(2, 1);
         Exchange updEx = exchangeService.getExchangeById(1);
+        verify(emailService, times(4)).sendEmail(anyString(), anyString(), anyString());
 
         assertEquals("DELIVERY_WITHOUT_TRACK", updEx.getTrack1());
         assertEquals("DELIVERY_WITHOUT_TRACK", updEx.getTrack2());
@@ -92,6 +103,8 @@ public class ExchangeServiceTest {
         User updatedUser = userService.getUserById(1);
         User updatedUser2 = userService.getUserById(2);
 
+        verify(emailService, times(8)).sendEmail(anyString(), anyString(), anyString());
+
         assertEquals(ExchangeStatus.COMPLETED, exchangeService.getExchangeById(1).getStatus());
         assertEquals(2, updatedUser.getLibrary().get(0).getId());
         assertEquals(1, updatedUser2.getLibrary().get(1).getId());
@@ -105,9 +118,24 @@ public class ExchangeServiceTest {
         exchangeRepository.save(ex);
         exchangeService.setNoTrack(1, 1);
         exchangeService.setNoTrack(2, 1);
+        verify(emailService, times(4)).sendEmail(anyString(), anyString(), anyString());
 
         assertThrows(IllegalStateException.class, () -> {
             exchangeService.setProblemsStatus(1);
         });
+    }
+
+    @Sql("/with_exchanges.sql")
+    @Test
+    public void testSetProblemsStatusCorrectDate() {
+        Exchange ex = exchangeService.getExchangeById(1);
+        ex.setDate(LocalDate.now().minusDays(45));
+        exchangeRepository.save(ex);
+        exchangeService.setNoTrack(1, 1);
+        exchangeService.setNoTrack(2, 1);
+        exchangeService.setProblemsStatus(ex.getId());
+        verify(emailService, times(6)).sendEmail(anyString(), anyString(), anyString());
+
+        assertEquals(ExchangeStatus.PROBLEMS, exchangeService.getExchangeById(ex.getId()).getStatus());
     }
 }

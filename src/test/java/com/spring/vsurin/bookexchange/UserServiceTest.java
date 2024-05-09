@@ -34,6 +34,9 @@ public class UserServiceTest {
     @Mock
     private EmailService emailService;
 
+    @Mock
+    private MailBuilder mailBuilder;
+
     @Test
     public void testGetUserById() {
         User user = User.builder()
@@ -76,9 +79,12 @@ public class UserServiceTest {
                 .username("test")
                 .role(UserRole.ROLE_ADMIN)
                 .gender(UserGender.MALE)
+                .showContacts(true)
                 .build();
 
         when(userRepository.findById(1)).thenReturn(user);
+        when(mailBuilder.buildDeleteUserMessage(anyString(), anyLong()))
+                .thenReturn(new EmailData("min095@list.ru", "Subject", "Message"));
 
         userService.deleteUser(1);
 
@@ -95,6 +101,7 @@ public class UserServiceTest {
                 .username("ad")
                 .role(UserRole.ROLE_ADMIN)
                 .gender(UserGender.MALE)
+                .showContacts(true)
                 .build();
 
         User admin2 = User.builder()
@@ -103,6 +110,7 @@ public class UserServiceTest {
                 .username("ad")
                 .role(UserRole.ROLE_ADMIN)
                 .gender(UserGender.MALE)
+                .showContacts(true)
                 .build();
 
         List<User> admins = new ArrayList<>();
@@ -119,6 +127,8 @@ public class UserServiceTest {
 
         when(userRepository.findByRole(UserRole.ROLE_ADMIN)).thenReturn(admins);
         when(userRepository.findById(3)).thenReturn(user);
+        when(mailBuilder.buildRequestToDeleteUserMessage(anyString(), anyLong(), anyString()))
+                .thenReturn(new EmailData("min095@list.ru", "Subject", "Message"));
 
         userService.sendRequestToDeleteUser(3, "anyReason");
 
@@ -167,6 +177,8 @@ public class UserServiceTest {
                 .role(UserRole.ROLE_USER)
                 .gender(UserGender.MALE)
                 .library(new ArrayList<>())
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
                 .build();
 
         Book testBook1 = Book.builder()
@@ -189,6 +201,86 @@ public class UserServiceTest {
         User updatedUser = userService.getUserById(1);
         assertNotNull(updatedUser);
         assertEquals(0, updatedUser.getLibrary().size());
+    }
+
+    @Test
+    public void testRemoveBookInExchangeFromUser() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .addressList(new ArrayList<>())
+                .library(new ArrayList<>())
+                .offeredBooks(new ArrayList<>())
+                .mainAddress("add")
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
+                .build();
+
+        User user2 = User.builder()
+                .id(2)
+                .email("min01@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .addressList(new ArrayList<>())
+                .library(new ArrayList<>())
+                .offeredBooks(new ArrayList<>())
+                .mainAddress("add")
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
+                .build();
+
+        Book testBook1 = Book.builder()
+                .id(1)
+                .title("Test Book 4")
+                .author("Test Author 4")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .usersOfferingForExchange(new ArrayList<>())
+                .publicationYear(Year.of(2010))
+                .build();
+
+        Book testBook2 = Book.builder()
+                .id(2)
+                .title("Test Book")
+                .author("Test Author")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .usersOfferingForExchange(new ArrayList<>())
+                .publicationYear(Year.of(2010))
+                .build();
+
+        Exchange exchange = Exchange.builder()
+                .member1(user)
+                .member2(user2)
+                .exchangedBook1(testBook1)
+                .exchangedBook2(testBook2)
+                .status(ExchangeStatus.IN_PROGRESS)
+                .build();
+
+        user.getExchangesAsMember1().add(exchange);
+        user2.getExchangesAsMember2().add(exchange);
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findById(2)).thenReturn(user2);
+        when(bookService.getBookById(1)).thenReturn(testBook1);
+        when(bookService.getBookById(2)).thenReturn(testBook2);
+        when((exchangeService.getExchangeById(1))).thenReturn(exchange);
+
+        userService.addBookToUserLibrary(1, 1);
+        userService.addBookToUserLibrary(2, 2);
+
+        userService.removeBookFromUserLibrary(1, 1);
+
+        User updatedUser = userService.getUserById(1);
+
+        assertNotNull(updatedUser);
+        assertEquals(1, updatedUser.getLibrary().size());
     }
 
     @Test
@@ -548,5 +640,139 @@ public class UserServiceTest {
         User updatedUser = userService.getUserById(1);
         assertNotNull(updatedUser);
         assertEquals(UserRole.ROLE_USER, updatedUser.getRole());
+    }
+
+    @Test
+    public void testEnableShowContacts() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(false)
+                .build();
+
+        User user2 = User.builder()
+                .id(2)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findById(2)).thenReturn(user2);
+
+        userService.enableShowContacts(1);
+        userService.enableShowContacts(2);
+
+        User updatedUser = userService.getUserById(1);
+        User updatedUser2 = userService.getUserById(2);
+        assertNotNull(updatedUser);
+        assertNotNull(updatedUser2);
+        assertTrue(updatedUser.isShowContacts());
+        assertTrue(updatedUser2.isShowContacts());
+    }
+
+    @Test
+    public void testDisableShowContacts() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(false)
+                .build();
+
+        User user2 = User.builder()
+                .id(2)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findById(2)).thenReturn(user2);
+
+        userService.disableShowContacts(1);
+        userService.disableShowContacts(2);
+
+        User updatedUser = userService.getUserById(1);
+        User updatedUser2 = userService.getUserById(2);
+        assertNotNull(updatedUser);
+        assertNotNull(updatedUser2);
+        assertFalse(updatedUser.isShowContacts());
+        assertFalse(updatedUser2.isShowContacts());
+    }
+
+    @Test
+    public void testUpdateUserPhone() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .phoneNumber("+79123456789")
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+
+        userService.updateUserPhone(1, "+79123456798");
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        assertEquals(updatedUser.getPhoneNumber(), "+79123456798");
+    }
+
+    @Test
+    public void testUpdateUserAvatar() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .phoneNumber("+79123456789")
+                .avatarLink("Link")
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+
+        userService.updateUserAvatarLink(1, "NEW LINK");
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        assertEquals(updatedUser.getAvatarLink(), "NEW LINK");
+    }
+
+    @Test
+    public void testUpdatePreferencesToUser() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .phoneNumber("+79123456789")
+                .avatarLink("Link")
+                .preferences("one")
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+
+        userService.updatePreferencesToUser(1, "two");
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        assertEquals(updatedUser.getPreferences(), "two");
     }
 }

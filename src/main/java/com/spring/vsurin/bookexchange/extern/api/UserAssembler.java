@@ -42,6 +42,9 @@ public class UserAssembler extends RepresentationModelAssemblerSupport<User, Use
                 .collect(Collectors.toList()));
         userDTO.setMainAddress(user.getMainAddress());
         userDTO.setRole(user.getRole());
+        userDTO.setShowContacts(user.isShowContacts());
+        userDTO.setAvatarLink(user.getAvatarLink());
+        userDTO.setPreferences(user.getPreferences());
 
         userDTO.add(linkTo(methodOn(UserController.class).getUserById(user.getId())).withSelfRel());
 

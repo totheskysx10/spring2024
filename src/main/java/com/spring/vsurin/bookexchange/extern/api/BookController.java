@@ -40,6 +40,7 @@ public class BookController {
                 .owners(new ArrayList<>())
                 .usersOfferingForExchange(new ArrayList<>())
                 .marks((List<Integer>) bookDTO.getMarks())
+                .rating(bookDTO.getRating())
                 .build();
 
         bookService.createBook(newBook);
@@ -83,7 +84,7 @@ public class BookController {
         return ResponseEntity.ok(booksPage);
     }
 
-    @PutMapping("/{bookId}/marks")
+    @PutMapping("/{bookId}/{userId}/marks")
     public ResponseEntity<Void> addMarkToBook(@PathVariable long bookId, @PathVariable long userId, @RequestBody @Valid BookUpdateDTO updateDTO) {
         bookService.addMarkToBook(bookId, updateDTO.getAddedMark(), userId);
         return ResponseEntity.ok().build();

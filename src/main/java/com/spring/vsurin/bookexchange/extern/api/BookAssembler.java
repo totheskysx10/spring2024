@@ -1,12 +1,10 @@
 package com.spring.vsurin.bookexchange.extern.api;
 
 import com.spring.vsurin.bookexchange.domain.Book;
-import com.spring.vsurin.bookexchange.domain.Exchange;
 import com.spring.vsurin.bookexchange.domain.User;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
 import java.util.stream.Collectors;
 
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
@@ -37,6 +35,7 @@ public class BookAssembler extends RepresentationModelAssemblerSupport<Book, Boo
         bookDTO.setGenre(book.getGenre());
         bookDTO.setDescription(book.getDescription());
         bookDTO.setMarks(book.getMarks());
+        bookDTO.setRating(book.getRating());
 
         bookDTO.add(linkTo(methodOn(BookController.class).getBookCover(book.getId())).withRel("book_cover"));
         bookDTO.add(linkTo(methodOn(BookController.class).getBookById(book.getId())).withSelfRel());

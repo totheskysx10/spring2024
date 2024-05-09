@@ -1,7 +1,6 @@
 package com.spring.vsurin.bookexchange.extern.api;
 
 import com.spring.vsurin.bookexchange.domain.RequestStatus;
-import jakarta.validation.constraints.NotNull;
 import jakarta.validation.constraints.Positive;
 import jakarta.validation.constraints.Size;
 import lombok.Data;

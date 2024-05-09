@@ -1,14 +1,10 @@
 package com.spring.vsurin.bookexchange.extern.api;
 
-import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.Exchange;
-import com.spring.vsurin.bookexchange.domain.User;
 import org.springframework.hateoas.server.mvc.RepresentationModelAssemblerSupport;
 import org.springframework.stereotype.Component;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
+import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.linkTo;
 import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 
 @Component
@@ -36,7 +32,7 @@ public class ExchangeAssembler extends RepresentationModelAssemblerSupport<Excha
         exchangeDTO.setStatus(exchange.getStatus());
         exchangeDTO.setDate(exchange.getDate());
 
-        // exchangeDTO.add(linkTo(methodOn(ExchangeController.class).getExchangeById(exchange.getId())).withSelfRel());
+        exchangeDTO.add(linkTo(methodOn(ExchangeController.class).getExchangeById(exchange.getId())).withSelfRel());
 
         return exchangeDTO;
     }

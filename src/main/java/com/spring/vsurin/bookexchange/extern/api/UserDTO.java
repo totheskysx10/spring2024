@@ -42,4 +42,11 @@ public class UserDTO extends RepresentationModel<UserDTO> {
 
     @Size(min = 50)
     private String mainAddress;
+
+    private boolean showContacts;
+
+    private String avatarLink;
+
+    @Size(max = 1000)
+    private String preferences;
 }
