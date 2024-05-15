@@ -18,7 +18,6 @@ public class UserDTO extends RepresentationModel<UserDTO> {
     @Size(max = 300)
     private String username;
 
-    @NotNull
     private UserGender gender;
 
     @Email(regexp = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
@@ -49,4 +48,6 @@ public class UserDTO extends RepresentationModel<UserDTO> {
 
     @Size(max = 1000)
     private String preferences;
+
+    private Iterable<Long> usersWithAccessToMainAddress;
 }

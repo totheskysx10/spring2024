@@ -101,4 +101,12 @@ public class DefaultMailBuilder implements MailBuilder {
 
         return new EmailData(receiver, emailSubject, emailMessage);
     }
+
+    public EmailData buildCancelMessage(String receiver, long exchangeId) {
+        String emailSubject = "BookExchange - Обмен отменён админом";
+
+        String emailMessage = "Обмен книгами №" + exchangeId + " отменён администратором приложения. Для уточнения подробностей свяжитесь с поддержкой.";
+
+        return new EmailData(receiver, emailSubject, emailMessage);
+    }
 }

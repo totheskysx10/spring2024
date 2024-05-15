@@ -3,6 +3,9 @@ package com.spring.vsurin.bookexchange.domain;
 import jakarta.persistence.*;
 import lombok.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.util.List;
 
@@ -42,7 +45,7 @@ public class User {
     @Enumerated(EnumType.STRING)
     @Column(name = "user_gender")
     @Getter
-    @NonNull
+    @Setter
     private UserGender gender;
 
     /**
@@ -81,7 +84,6 @@ public class User {
      */
     @ElementCollection(fetch = FetchType.EAGER)
     @CollectionTable(name = "user_addresses", joinColumns = @JoinColumn(name = "user_id"))
-    @Getter
     private List<String> addressList;
 
     /**
@@ -109,7 +111,6 @@ public class User {
      * Основной адрес доставки пользователя, используемый в данный момент.
      */
     @Column(name = "main_address")
-    @Getter
     @Setter
     private String mainAddress;
 
@@ -148,6 +149,13 @@ public class User {
     private String preferences;
 
     /**
+     * Id пользователей, имеющих доступ к главному адресу доставки.
+     */
+    @ElementCollection(fetch = FetchType.EAGER)
+    @CollectionTable(name = "users_with_access_to_mainAddress", joinColumns = @JoinColumn(name = "user_id"))
+    private List<Long> usersWithAccessToMainAddress;
+
+    /**
      * Возвращает телефон пользователя, если разрешено
      */
     public String getPhoneNumber() {
@@ -157,5 +165,70 @@ public class User {
             log.warn("Пользователь с id {} скрыл контакты!", id);
             return null;
         }
+    }
+
+    /**
+     * Возвращает список адресов пользователя, если это текущий пользователь
+     */
+    public List<String> getAddressList() {
+            if (emailEqualsWithAuth())
+                return addressList;
+
+            return null;
+    }
+
+    /**
+     * Возвращает главный адрес пользователя, если это текущий пользователь или участник обмена с этим пользователем
+     */
+    public String getMainAddress(long userId) {
+        if (emailEqualsWithAuth() || usersWithAccessToMainAddress.contains(userId))
+            return mainAddress;
+
+        return null;
+    }
+
+    /**
+     * Возвращает итератор для Id пользователей, имеющих доступ к главному адресу доставки.
+     *
+     * @return итератор для Id пользователей, имеющих доступ к главному адресу доставки
+     */
+    public Iterable<Long> getUsersWithAccessToMainAddress() {
+        return usersWithAccessToMainAddress;
+    }
+
+    /**
+     * Добавляет Id пользователя, получающего доступ к главному адресу доставки
+     *
+     * @param userId   Id пользователя, получающего доступ к главному адресу доставки
+     */
+    public void addUserWithAccessToMainAddress(long userId) {
+        usersWithAccessToMainAddress.add(userId);
+    }
+
+    /**
+     * Удаляет Id пользователя, имеющего доступ к главному адресу доставки
+     *
+     * @param userId   Id пользователя, имеющего доступ к главному адресу доставки
+     */
+    public void removeUserWithAccessToMainAddress(long userId) {
+        usersWithAccessToMainAddress.remove(userId);
+    }
+
+    /**
+     * Проверяет, совпадает ли email текущего аутентифицированного пользователя с email объекта.
+     *
+     * @return true, если email текущего аутентифицированного пользователя совпадает с email объекта; в противном случае false.
+     */
+    private boolean emailEqualsWithAuth() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof OAuth2User) {
+            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+            String name = oauth2User.getName();
+            if (name == null)
+                return false;
+
+            return name.equals(this.email);
+        }
+        return false;
     }
 }

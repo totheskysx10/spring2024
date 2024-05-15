@@ -119,4 +119,16 @@ public class UserController {
         userService.updatePreferencesToUser(userId, updateDTO.getPreferences());
         return ResponseEntity.ok().build();
     }
+
+    @PutMapping("/block/{userId}")
+    public ResponseEntity<Void> blockUser(@PathVariable long userId) {
+        userService.blockUser(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/unblock/{userId}")
+    public ResponseEntity<Void> unblockUser(@PathVariable long userId) {
+        userService.unblockUser(userId);
+        return ResponseEntity.ok().build();
+    }
 }

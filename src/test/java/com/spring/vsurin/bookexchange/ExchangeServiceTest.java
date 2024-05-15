@@ -138,4 +138,17 @@ public class ExchangeServiceTest {
 
         assertEquals(ExchangeStatus.PROBLEMS, exchangeService.getExchangeById(ex.getId()).getStatus());
     }
+
+    @Sql("/with_exchanges.sql")
+    @Test
+    public void testCancelExchange() {
+        Exchange ex = exchangeService.getExchangeById(1);
+
+        exchangeService.setNoTrack(1, 1);
+        exchangeService.setNoTrack(2, 1);
+        exchangeService.cancelExchange(ex.getId());
+        verify(emailService, times(6)).sendEmail(anyString(), anyString(), anyString());
+
+        assertEquals(ExchangeStatus.CANCELLED_BY_ADMIN, exchangeService.getExchangeById(ex.getId()).getStatus());
+    }
 }

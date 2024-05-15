@@ -6,12 +6,17 @@ import com.spring.vsurin.bookexchange.app.RequestService;
 import com.spring.vsurin.bookexchange.app.UserService;
 import com.spring.vsurin.bookexchange.domain.*;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.test.context.jdbc.Sql;
 
 import java.util.List;
@@ -34,6 +39,15 @@ public class RequestServiceTest {
 
     @MockBean
     private EmailService emailService;
+
+    @Mock
+    private OAuth2User oauth2User;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private SecurityContext securityContext;
 
     @Sql("/with_offered2.sql")
     @Test
@@ -65,6 +79,11 @@ public class RequestServiceTest {
     @Sql("/with_req.sql")
     @Test
     public void testAcceptRequest() {
+        when(oauth2User.getName()).thenReturn(userService.getUserById(2).getEmail());
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
         requestService.acceptRequest(1, 1);
         verify(emailService, times(2)).sendEmail(anyString(), anyString(), anyString());
 
@@ -85,6 +104,11 @@ public class RequestServiceTest {
     @Sql("/with_req.sql")
     @Test
     public void testAcceptRequestNoRejectedRequests() {
+        when(oauth2User.getName()).thenReturn(userService.getUserById(2).getEmail());
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
         requestService.acceptRequest(1, 1);
         verify(emailService, times(2)).sendEmail(anyString(), anyString(), anyString());
 

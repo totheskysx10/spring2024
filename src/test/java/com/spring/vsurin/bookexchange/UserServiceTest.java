@@ -6,6 +6,10 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContext;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 
 import java.time.Year;
 import java.util.ArrayList;
@@ -36,6 +40,15 @@ public class UserServiceTest {
 
     @Mock
     private MailBuilder mailBuilder;
+
+    @Mock
+    private OAuth2User oauth2User;
+
+    @Mock
+    private Authentication authentication;
+
+    @Mock
+    private SecurityContext securityContext;
 
     @Test
     public void testGetUserById() {
@@ -312,6 +325,11 @@ public class UserServiceTest {
 
         when(userRepository.findById(1)).thenReturn(user);
         when(bookService.getBookById(1)).thenReturn(testBook1);
+        when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         userService.addBookToUserLibrary(1, 1);
         userService.addBookToOfferedByUser(1, 1);
@@ -347,6 +365,11 @@ public class UserServiceTest {
 
         when(userRepository.findById(1)).thenReturn(user);
         when(bookService.getBookById(1)).thenReturn(testBook1);
+        when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         userService.addBookToUserLibrary(1, 1);
         userService.addBookToOfferedByUser(1, 1);
@@ -425,6 +448,11 @@ public class UserServiceTest {
         when(bookService.getBookById(1)).thenReturn(testBook1);
         when(bookService.getBookById(2)).thenReturn(testBook2);
         when((exchangeService.getExchangeById(1))).thenReturn(exchange);
+        when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         userService.addBookToUserLibrary(1, 1);
         userService.addBookToUserLibrary(2, 2);
@@ -462,6 +490,11 @@ public class UserServiceTest {
 
         when(userRepository.findById(1)).thenReturn(user);
         when(bookService.getBookById(1)).thenReturn(testBook);
+        when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         userService.addBookToUserLibrary(1, 1);
         userService.addBookToOfferedByUser(1, 1);
@@ -484,6 +517,10 @@ public class UserServiceTest {
                 .build();
 
         when(userRepository.findById(1)).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         String address = "Test";
 
@@ -506,6 +543,10 @@ public class UserServiceTest {
                 .build();
 
         when(userRepository.findById(1)).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         String address1 = "Test";
         String address2 = "Test2";
@@ -531,6 +572,11 @@ public class UserServiceTest {
                 .build();
 
         when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
 
         String address1 = "Test";
         String address2 = "Test2";
@@ -541,7 +587,37 @@ public class UserServiceTest {
 
         User updatedUser = userService.getUserById(1);
         assertNotNull(updatedUser);
-        assertEquals("Test2", updatedUser.getMainAddress());
+        assertEquals("Test2", updatedUser.getMainAddress(userService.getCurrentAuthId()));
+    }
+
+    @Test
+    public void testUpdateMainAddressNotInList() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .addressList(new ArrayList<>())
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        String address1 = "Test";
+        String address2 = "Test2";
+
+        userService.addAddressToUser(1, address1);
+        userService.addAddressToUser(1, address2);
+        userService.updateMainAddress(1, 3);
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        assertNull(updatedUser.getMainAddress(userService.getCurrentAuthId()));
     }
 
     @Test
@@ -774,5 +850,191 @@ public class UserServiceTest {
         User updatedUser = userService.getUserById(1);
         assertNotNull(updatedUser);
         assertEquals(updatedUser.getPreferences(), "two");
+    }
+
+    @Test
+    public void testUpdateGenderToUser() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .phoneNumber("+79123456789")
+                .avatarLink("Link")
+                .preferences("one")
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+
+        userService.updateUserGender(1, UserGender.FEMALE);
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        assertEquals(updatedUser.getGender(), UserGender.FEMALE);
+    }
+
+    @Test
+    public void testGetCurrentAuthId() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .phoneNumber("+79123456789")
+                .avatarLink("Link")
+                .preferences("one")
+                .build();
+
+        when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
+        when(oauth2User.getName()).thenReturn("min0@list.ru");
+        when(authentication.getPrincipal()).thenReturn(oauth2User);
+        when(securityContext.getAuthentication()).thenReturn(authentication);
+        SecurityContextHolder.setContext(securityContext);
+
+        Long id = userService.getCurrentAuthId();
+        assertEquals(user.getId(), id);
+    }
+
+    @Test
+    public void testAddUserWithAccessToMainAddress() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .phoneNumber("+79123456789")
+                .avatarLink("Link")
+                .preferences("one")
+                .usersWithAccessToMainAddress(new ArrayList<>())
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+
+        userService.addUserWithAccessToMainAddress(1, 2);
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        int i = 0;
+
+        for (long id : updatedUser.getUsersWithAccessToMainAddress()) {
+            i++;
+        }
+        assertEquals(1, i);
+    }
+
+    @Test
+    public void testRemoveUserWithAccessToMainAddress() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .phoneNumber("+79123456789")
+                .avatarLink("Link")
+                .preferences("one")
+                .usersWithAccessToMainAddress(new ArrayList<>())
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+
+        userService.addUserWithAccessToMainAddress(1, 2);
+        userService.addUserWithAccessToMainAddress(1, 3);
+        userService.addUserWithAccessToMainAddress(1, 4);
+        userService.addUserWithAccessToMainAddress(1, 1);
+        userService.addUserWithAccessToMainAddress(1, 2);
+
+        userService.removeUserWithAccessToMainAddress(1, 2);
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+
+        int count = 0;
+        long firstId = 0;
+
+        for (long id : updatedUser.getUsersWithAccessToMainAddress()) {
+            if (count == 0) {
+                firstId = id;
+            }
+            count++;
+        }
+
+        assertEquals(4, count);
+        assertEquals(3, firstId);
+    }
+
+    @Test
+    public void testBlockUser() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(false)
+                .build();
+
+        User user2 = User.builder()
+                .id(2)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_BLOCKED)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findById(2)).thenReturn(user2);
+
+        userService.blockUser(1);
+        userService.blockUser(2);
+
+        User updatedUser = userService.getUserById(1);
+        User updatedUser2 = userService.getUserById(2);
+        assertNotNull(updatedUser);
+        assertNotNull(updatedUser2);
+        assertEquals(UserRole.ROLE_BLOCKED, updatedUser.getRole());
+        assertEquals(UserRole.ROLE_BLOCKED, updatedUser2.getRole());
+    }
+
+    @Test
+    public void testUnblockUser() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(false)
+                .build();
+
+        User user2 = User.builder()
+                .id(2)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_BLOCKED)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findById(2)).thenReturn(user2);
+
+        userService.unblockUser(1);
+        userService.unblockUser(2);
+
+        User updatedUser = userService.getUserById(1);
+        User updatedUser2 = userService.getUserById(2);
+        assertNotNull(updatedUser);
+        assertNotNull(updatedUser2);
+        assertEquals(UserRole.ROLE_USER, updatedUser.getRole());
+        assertEquals(UserRole.ROLE_USER, updatedUser2.getRole());
     }
 }

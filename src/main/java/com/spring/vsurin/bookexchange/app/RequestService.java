@@ -98,12 +98,16 @@ public class RequestService {
             Book bookReceiverWants = bookService.getBookById(bookId);
 
             User sender = request.getSender();
+            User receiver = request.getReceiver();
 
             if (!sender.getOfferedBooks().contains(bookReceiverWants)) {
                 throw new IllegalArgumentException("Отправитель заявки не предлагает данную книгу.");
             }
 
             List<Request> relatedRequests = requestRepository.findByStatusAndBookSenderWants(RequestStatus.ACTUAL, request.getBookSenderWants());
+
+            userService.addUserWithAccessToMainAddress(sender.getId(), receiver.getId());
+            userService.addUserWithAccessToMainAddress(receiver.getId(), sender.getId());
 
             for (Request relatedRequest : relatedRequests) {
                 if (relatedRequest.getId() == requestId) {
@@ -115,8 +119,8 @@ public class RequestService {
                             .member2(relatedRequest.getReceiver())
                             .exchangedBook1(relatedRequest.getBookReceiverWants())
                             .exchangedBook2(relatedRequest.getBookSenderWants())
-                            .address1(relatedRequest.getSender().getMainAddress())
-                            .address2(relatedRequest.getReceiver().getMainAddress())
+                            .address1(relatedRequest.getSender().getMainAddress(userService.getCurrentAuthId()))
+                            .address2(relatedRequest.getReceiver().getMainAddress(userService.getCurrentAuthId()))
                             .build();
                     exchangeService.createExchange(exchange);
                     log.info("Заявка с id {} принята, создан обмен", requestId);

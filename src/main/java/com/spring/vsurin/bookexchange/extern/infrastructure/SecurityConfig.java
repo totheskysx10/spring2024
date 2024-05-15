@@ -9,6 +9,10 @@ import org.springframework.security.config.Customizer;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.web.SecurityFilterChain;
+import org.springframework.security.web.util.matcher.RequestMatcher;
+
+import static org.springframework.security.authorization.AuthorityReactiveAuthorizationManager.hasAuthority;
+import static org.springframework.security.web.util.matcher.RequestMatchers.allOf;
 
 /**
  * Конфигурация Spring Security для профиля prod - c ограничениями доступа
@@ -31,14 +35,14 @@ public class SecurityConfig {
     public SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests((authorize) -> authorize
-                        .requestMatchers("/users/delete/**", "/books/delete/**", "/users/admin/**", "/users/no-admin/**")
+                        .requestMatchers("/users/delete/**", "/books/delete/**", "/users/admin/**", "/users/no-admin/**", "/users/block/**", "/users/unblock/**", "/exchanges/cancel/**")
                         .hasAuthority("ROLE_ADMIN")
                         .requestMatchers("/users/{userId}/addresses", "/users/{userId}/mainAddress/**", "/users/enable-show-contacts/{userId}", "/users/disable-show-contacts/{userId}", "/users/{userId}/preferences")
                         .access((authentication, context) -> {
                             long userId = Long.parseLong(context.getVariables().get("userId"));
                             return new AuthorizationDecision(webSecurityConditions.isCurrentUser(userId));
                         })
-                        .anyRequest().authenticated()
+                        .anyRequest().hasAnyAuthority("ROLE_USER", "ROLE_ADMIN")
                 )
                 .oauth2Login(Customizer.withDefaults())
                 .csrf((csrf) -> csrf.disable());

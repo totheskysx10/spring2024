@@ -122,4 +122,13 @@ public interface MailBuilder {
      * @return Объект EmailData, представляющий электронное сообщение.
      */
     EmailData buildProblemsMessage(String receiver, long exchangeId, User user);
+
+    /**
+     * Создаёт сообщение об отмене обмена.
+     *
+     * @param receiver      Адрес электронной почты получателя.
+     * @param exchangeId    Идентификатор обмена.
+     * @return Объект EmailData, представляющий электронное сообщение.
+     */
+    EmailData buildCancelMessage(String receiver, long exchangeId);
 }

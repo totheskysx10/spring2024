@@ -2,6 +2,9 @@ package com.spring.vsurin.bookexchange.app;
 
 import com.spring.vsurin.bookexchange.domain.*;
 import lombok.extern.slf4j.Slf4j;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
 
 import java.util.ArrayList;
@@ -110,7 +113,7 @@ public class UserService {
         User user = getUserById(userId);
         Book book = bookService.getBookById(bookId);
 
-        if (user.getMainAddress() == null) {
+        if (user.getMainAddress(getCurrentAuthId()) == null) {
             log.error("Нельзя предлагать книги для обмена, если не указан основной адрес доставки!");
             return;
         }
@@ -233,6 +236,20 @@ public class UserService {
     }
 
     /**
+     * Обновляет поле с полом пользователя.
+     * @param userId идентификатор пользователя
+     * @param gender пол
+     */
+    public void updateUserGender(long userId, UserGender gender) {
+        User user = getUserById(userId);
+        if (user != null) {
+            user.setGender(gender);
+            userRepository.save(user);
+            log.info("Настройка пола пользователя с id {} изменена на {}", userId, gender);
+        }
+    }
+
+    /**
      * Обновляет ссылку на аватар пользователя.
      * @param userId идентификатор пользователя
      * @param newLink новая ссылка
@@ -253,9 +270,14 @@ public class UserService {
      */
     public void updateMainAddress(long userId, int index) {
         User user = getUserById(userId);
-        user.setMainAddress(user.getAddressList().get(index));
-        userRepository.save(user);
-        log.info("Основной адрес доставки пользователя с id {} изменён на {}", userId, user.getAddressList().get(index));
+
+        if (index >= 0 && index < user.getAddressList().size()) {
+            user.setMainAddress(user.getAddressList().get(index));
+            userRepository.save(user);
+            log.info("Основной адрес доставки пользователя с id {} изменён на {}", userId, user.getAddressList().get(index));
+        }
+        else
+            log.error("Адрес отсутствует в списке!");
     }
 
     /**
@@ -373,5 +395,107 @@ public class UserService {
             userRepository.save(user);
             log.info("Предпочтения обновлены для пользователя с id {}", userId);
         }
+    }
+
+    /**
+     * Добавляет пользователю userIdToAdd доступ к главному адресу пользователя userId.
+     *
+     * @param userId      идентификатор пользователя, к чьёму адресу даётся доступ
+     * @param userIdToAdd идентификатор пользователя, которому предоставляется доступ к главному адресу
+     */
+    public void addUserWithAccessToMainAddress(long userId, long userIdToAdd) {
+        User user = getUserById(userId);
+        if (user != null) {
+            user.addUserWithAccessToMainAddress(userIdToAdd);
+            userRepository.save(user);
+            log.info("Пользователь {} получил доступ к главному адресу пользователя с id {}", userIdToAdd, userId);
+        }
+    }
+
+    /**
+     * Запрещает пользователю userIdToAdd доступ к главному адресу пользователя userId.
+     *
+     * @param userId      идентификатор пользователя, к чьёму адресу запрещается доступ
+     * @param userIdToRemove идентификатор пользователя, которому запрещается доступ к главному адресу
+     */
+    public void removeUserWithAccessToMainAddress(long userId, long userIdToRemove) {
+        User user = getUserById(userId);
+        if (user != null) {
+            user.removeUserWithAccessToMainAddress(userIdToRemove);
+            userRepository.save(user);
+            log.info("Пользователь {} больше не имеет доступа к главному адресу пользователя с id {}", userIdToRemove, userId);
+            } else {
+            log.warn("Пользователь {} изначально не имел доступа к главному адресу пользователя с id {}", userIdToRemove, userId);
+        }
+    }
+
+    /**
+     * Получает идентификатор текущего аутентифицированного пользователя.
+     *
+     * @return Идентификатор текущего аутентифицированного пользователя
+     * @throws IllegalArgumentException если пользователь не аутентифицирован или не найден в базе данных
+     */
+    public Long getCurrentAuthId() {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication != null && authentication.getPrincipal() instanceof OAuth2User) {
+            OAuth2User oauth2User = (OAuth2User) authentication.getPrincipal();
+            String name = oauth2User.getName();
+
+            if (name != null) {
+                User foundUser = userRepository.findByEmail(name);
+
+                if (foundUser == null) {
+                    throw new IllegalArgumentException("Пользователь с email " + name + " не найден");
+                } else {
+                    return foundUser.getId();
+                }
+            } else {
+                throw new IllegalArgumentException("Имя пользователя равно null");
+            }
+        } else {
+            throw new IllegalArgumentException("Пользователь не аутентифицирован или аутентификация не проведена через OAuth2");
+        }
+    }
+
+    /**
+     * Блокирует пользователя.
+     * @param userId идентификатор пользователя
+     */
+    public void blockUser(long userId) {
+        User user = getUserById(userId);
+        if (user == null) {
+            log.error("Пользователь с id {} не найден", userId);
+            return;
+        }
+
+        if (user.getRole() == UserRole.ROLE_BLOCKED) {
+            log.warn("Пользователь с id {} уже заблокирован", userId);
+            return;
+        }
+
+        user.setRole(UserRole.ROLE_BLOCKED);
+        userRepository.save(user);
+        log.info("Пользователь с id {} заблокирован", userId);
+    }
+
+    /**
+     * Разблокирует пользователя.
+     * @param userId идентификатор пользователя
+     */
+    public void unblockUser(long userId) {
+        User user = getUserById(userId);
+        if (user == null) {
+            log.error("Пользователь с id {} не найден", userId);
+            return;
+        }
+
+        if (user.getRole() == UserRole.ROLE_USER || user.getRole() == UserRole.ROLE_ADMIN) {
+            log.warn("Пользователь с id {} не заблокирован", userId);
+            return;
+        }
+
+        user.setRole(UserRole.ROLE_USER);
+        userRepository.save(user);
+        log.info("Пользователь с id {} разблокирован", userId);
     }
 }

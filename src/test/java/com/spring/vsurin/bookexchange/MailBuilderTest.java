@@ -190,5 +190,17 @@ public class MailBuilderTest {
                 "Почта: test1@example.com", emailData.getEmailMessage());
         assertEquals("recipient@example.com", emailData.getEmailReceiver());
     }
+
+    @Test
+    public void testBuildCancelMessage() {
+        String receiver = "recipient@example.com";
+        long exchangeId = 555;
+
+        EmailData emailData = mailBuilder.buildCancelMessage(receiver, exchangeId);
+
+        assertEquals("BookExchange - Обмен отменён админом", emailData.getEmailSubject());
+        assertEquals("Обмен книгами №555 отменён администратором приложения. Для уточнения подробностей свяжитесь с поддержкой.", emailData.getEmailMessage());
+        assertEquals("recipient@example.com", emailData.getEmailReceiver());
+    }
 }
 

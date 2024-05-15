@@ -34,7 +34,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     /**
      * Загружает данные пользователя из OAuth2UserRequest,
      * создаёт нового пользователя, если он заходит впервые.
-     * Если пользователь в аккаунте яндекса поменял номер телефона или аватар,
+     * Если пользователь в аккаунте яндекса добавил свой пол, поменял номер телефона или аватар,
      * то они обновятся и при авторизации в приложении.
      *
      * @param userRequest Запрос OAuth2User, содержащий данные пользователя.
@@ -48,6 +48,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String email = (String) oAuth2User.getAttributes().get("default_email");
         LinkedHashMap<String, Object> defaultPhoneAttributes = (LinkedHashMap<String, Object>) oAuth2User.getAttribute("default_phone");
         String phoneNumber = (String) defaultPhoneAttributes.get("number");
+        String gender = oAuth2User.getAttribute("sex");
         String avatarLink = getAvatarLinkFromYandex(oAuth2User);
 
         User user = userRepository.findByEmail(email);
@@ -71,6 +72,9 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
 
             if (!Objects.equals(user.getAvatarLink(), avatarLink))
                 userService.updateUserAvatarLink(user.getId(), avatarLink);
+
+            if (!Objects.equals(user.getGender(), gender))
+                userService.updateUserGender(user.getId(), getConstantGenderValue(gender));
         }
 
         oAuth2User = setRole(oAuth2User, user.getRole().toString());
@@ -91,16 +95,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
         String gender = oAuth2User.getAttribute("sex");
         String avatarLink = getAvatarLinkFromYandex(oAuth2User);
 
-        UserGender genderValue = null;
-
-        switch (gender) {
-            case "female":
-                genderValue = UserGender.FEMALE;
-                break;
-            case "male":
-                genderValue = UserGender.MALE;
-                break;
-        }
+        UserGender genderValue = getConstantGenderValue(gender);
 
         User newUser = User.builder()
                 .username(name)
@@ -115,6 +110,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .role(UserRole.ROLE_USER)
                 .showContacts(false)
                 .avatarLink(avatarLink)
+                .usersWithAccessToMainAddress(new ArrayList<>())
                 .build();
 
         return newUser;
@@ -139,5 +135,19 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
             avatarLink = "DEFAULT BOOKEXCHANGE AVATAR LINK";
 
         return avatarLink;
+    }
+
+    private UserGender getConstantGenderValue(String gender) {
+        UserGender genderValue;
+
+        if ("female".equals(gender)) {
+            genderValue = UserGender.FEMALE;
+        } else if ("male".equals(gender)) {
+            genderValue = UserGender.MALE;
+        } else {
+            genderValue = null;
+        }
+
+        return genderValue;
     }
 }

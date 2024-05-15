@@ -51,6 +51,12 @@ public class ExchangeController {
         return ResponseEntity.ok().build();
     }
 
+    @PutMapping("/cancel/{exchangeId}")
+    public ResponseEntity<Void> cancelExchange(@PathVariable long exchangeId) {
+        exchangeService.cancelExchange(exchangeId);
+        return ResponseEntity.ok().build();
+    }
+
     @GetMapping("/search")
     public ResponseEntity<List<ExchangeDTO>> searchByStatusAndMember(@RequestParam ExchangeStatus status, @RequestParam long userId) {
         List<ExchangeDTO> exchanges = exchangeService.searchByStatusAndMember(status, userId).stream()

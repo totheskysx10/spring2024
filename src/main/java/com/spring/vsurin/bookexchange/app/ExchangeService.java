@@ -210,10 +210,15 @@ public class ExchangeService {
 
         exchange.setStatus(ExchangeStatus.COMPLETED);
         exchangeRepository.save(exchange);
+
         userService.removeBookFromUserLibrary(member1Id, exchangedBook1Id);
         userService.removeBookFromUserLibrary(member2Id, exchangedBook2Id);
         userService.addBookToUserLibrary(member2Id, exchangedBook1Id);
         userService.addBookToUserLibrary(member1Id, exchangedBook2Id);
+
+        userService.removeUserWithAccessToMainAddress(member1Id, member2Id);
+        userService.removeUserWithAccessToMainAddress(member2Id, member1Id);
+
         log.info("Обмен {} успешно завершён, библиотеки пользователей обновлены", exchange.getId());
 
         EmailData emailData1 = mailBuilder.buildFinalizeExchangeMessage(exchange.getMember1().getEmail(), exchange.getId());
@@ -270,5 +275,27 @@ public class ExchangeService {
             throw new IllegalStateException("Не удалось установить статус PROBLEMS для обмена с id: " + exchangeId +
                     ", так как не прошло 30 дней с момента создания обмена.");
         }
+    }
+
+    /**
+     * Устанавливает статус "PROBLEMS" для обмена с указанным идентификатором, если прошло 30 или более дней с момента его создания.
+     * Если условие не выполнено, выбрасывается исключение IllegalStateException.
+     *
+     * @param exchangeId Идентификатор обмена, для которого требуется установить статус "PROBLEMS".
+     * @throws IllegalStateException если не удалось установить статус "PROBLEMS", потому что не прошло 30 дней с момента создания обмена.
+     */
+    public void cancelExchange(long exchangeId) {
+        Exchange exchange = getExchangeById(exchangeId);
+
+        exchange.setStatus(ExchangeStatus.CANCELLED_BY_ADMIN);
+        exchangeRepository.save(exchange);
+        log.info("Обмен {} отменён админом", exchange.getId());
+
+        EmailData emailData1 = mailBuilder.buildCancelMessage(exchange.getMember1().getEmail(), exchange.getId());
+        emailService.sendEmail(emailData1.getEmailReceiver(), emailData1.getEmailSubject(), emailData1.getEmailMessage());
+
+        EmailData emailData2 = mailBuilder.buildCancelMessage(exchange.getMember2().getEmail(), exchange.getId());
+        emailService.sendEmail(emailData2.getEmailReceiver(), emailData2.getEmailSubject(), emailData2.getEmailMessage());
+
     }
 }

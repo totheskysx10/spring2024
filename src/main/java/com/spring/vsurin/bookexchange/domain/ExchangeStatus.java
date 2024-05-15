@@ -32,7 +32,12 @@ public enum ExchangeStatus {
     /**
      * Возникли проблемы при обмене.
      */
-    PROBLEMS
+    PROBLEMS,
+
+    /**
+     * Обмен отменён админом.
+     */
+    CANCELLED_BY_ADMIN
 }
 
 

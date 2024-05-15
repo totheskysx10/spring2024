@@ -13,5 +13,10 @@ public enum UserRole {
     /**
      * Администратор
      */
-    ROLE_ADMIN
+    ROLE_ADMIN,
+
+    /**
+     * Заблокированный пользователь
+     */
+    ROLE_BLOCKED
 }
