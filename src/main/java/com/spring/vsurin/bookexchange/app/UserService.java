@@ -55,7 +55,7 @@ public class UserService {
             throw new IllegalArgumentException("Пользователь с id " + userId + " не найден");
         } else {
             EmailData emailData = mailBuilder.buildDeleteUserMessage(foundUser.getEmail(), userId);
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
 
             userRepository.deleteById(userId);
             log.info("Удалён пользователь с id {}", userId);
@@ -76,7 +76,7 @@ public class UserService {
 
             adminList.forEach(admin -> {
                 EmailData emailData = mailBuilder.buildRequestToDeleteUserMessage(admin.getEmail(), userId, reason);
-                emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+                emailService.sendEmail(emailData);
             });
 
         }
@@ -106,6 +106,7 @@ public class UserService {
     /**
      * Добавляет книгу в библиотеке к тем, которые пользователь готов обменять.
      * Проверяет, не принимает ли эта книга участие в обмене в данный момент.
+     * Отправялет уведомления на почту тем людям, которые имеют книгу в списке желаний.
      * @param userId идентификатор пользователя
      * @param bookId идентификатор книги для добавления
      */
@@ -130,8 +131,15 @@ public class UserService {
 
                 if (!bookInExchange) {
                     user.getOfferedBooks().add(book);
-                    book.getUsersOfferingForExchange().add(user);
                     userRepository.save(user);
+
+                    List<User> usersWantThisBook = book.getUsersHaveInWishlist();
+
+                    usersWantThisBook.forEach(wisher -> {
+                        EmailData emailData = mailBuilder.buildAvailableFromWishlistMessage(wisher.getEmail(), book.getTitle(), book.getAuthor(), user.getUsername());
+                        emailService.sendEmail(emailData);
+                    });
+
                     log.info("Книга с id {} в библиотеке пользователя с id {} доступна для обмена", bookId, userId);
                 } else {
                     log.error("Книга с id {} в библиотеке пользователя с id {} не доступна для обмена! Она принимает участие в другом обмене!", bookId, userId);
@@ -155,7 +163,7 @@ public class UserService {
 
         Book book = bookService.getBookById(bookId);
 
-        if (user.getLibrary().contains(book)) {
+        if (user.getOfferedBooks().contains(book)) {
             user.getOfferedBooks().remove(book);
             userRepository.save(user);
             log.info("Книга с id {} в библиотеке пользователя с id {} больше не доступна для обмена", bookId, userId);
@@ -283,7 +291,7 @@ public class UserService {
     /**
      * Объединяет в один список все обмены пользователя.
      * @param userId идентификатор пользователя
-     * @returns все обмены пользователя
+     * @return все обмены пользователя
      */
     public List<Exchange> getAllUserExchanges(long userId) {
         User user = getUserById(userId);
@@ -497,5 +505,66 @@ public class UserService {
         user.setRole(UserRole.ROLE_USER);
         userRepository.save(user);
         log.info("Пользователь с id {} разблокирован", userId);
+    }
+
+    /**
+     * Разблокирует пользователя и выдаёт ему статус админа.
+     * @param userId идентификатор пользователя
+     */
+    public void unblockUserAsAdmin(long userId) {
+        User user = getUserById(userId);
+        if (user == null) {
+            log.error("Пользователь с id {} не найден", userId);
+            return;
+        }
+
+        if (user.getRole() == UserRole.ROLE_USER || user.getRole() == UserRole.ROLE_ADMIN) {
+            log.warn("Пользователь с id {} не заблокирован", userId);
+            return;
+        }
+
+        user.setRole(UserRole.ROLE_ADMIN);
+        userRepository.save(user);
+        log.info("Пользователь с id {} разблокирован и назначен администратором", userId);
+    }
+
+    /**
+     * Добавляет книгу в список желаний пользователя, которые он хотел бы получить в результате обмена, но которые пока недоступны.
+     * Проверяет, что книга не в библиотеке в данный момент.
+     * @param userId идентификатор пользователя
+     * @param bookId идентификатор книги для добавления
+     */
+    public void addBookToWishlist(long userId, long bookId) {
+        User user = getUserById(userId);
+        Book book = bookService.getBookById(bookId);
+
+        if (book != null) {
+            if (!user.getLibrary().contains(book)) {
+                user.getWishlist().add(book);
+                userRepository.save(user);
+                log.info("Книга с id {} добавлена в список желаний пользователя с id {}", bookId, userId);
+            } else {
+                log.error("Книга с id {} не добавлена в список желаний пользователя с id {}, т.к. уже в библиотеке!", bookId, userId);
+            }
+        } else {
+            log.error("Книги не существует!");
+        }
+    }
+
+    /**
+     * Удаляет книгу в библиотеке из тех, которые пользователь готов обменять.
+     * @param userId идентификатор пользователя
+     * @param bookId идентификатор книги для добавления
+     */
+    public void removeBookFromWishlist(long userId, long bookId) {
+        User user = getUserById(userId);
+
+        Book book = bookService.getBookById(bookId);
+
+        if (user.getWishlist().contains(book)) {
+            user.getWishlist().remove(book);
+            userRepository.save(user);
+            log.info("Книга с id {} удалена из списка желаний пользователя с id {}", bookId, userId);
+        }
     }
 }

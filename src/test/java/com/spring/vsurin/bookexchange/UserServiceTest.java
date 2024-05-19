@@ -17,7 +17,6 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.anyString;
-import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 @DataJpaTest
@@ -101,7 +100,7 @@ public class UserServiceTest {
 
         userService.deleteUser(1);
 
-        verify(emailService).sendEmail(eq("min095@list.ru"), anyString(), anyString());
+        verify(emailService).sendEmail(any(EmailData.class));
 
         verify(userRepository, times(1)).deleteById(1);
     }
@@ -145,7 +144,7 @@ public class UserServiceTest {
 
         userService.sendRequestToDeleteUser(3, "anyReason");
 
-        verify(emailService, times(2)).sendEmail(eq("min095@list.ru"), anyString(), anyString());
+        verify(emailService, times(2)).sendEmail(any(EmailData.class));
     }
 
     @Test
@@ -309,6 +308,22 @@ public class UserServiceTest {
                 .offeredBooks(new ArrayList<>())
                 .exchangesAsMember1(new ArrayList<>())
                 .exchangesAsMember2(new ArrayList<>())
+                .wishlist(new ArrayList<>())
+                .mainAddress("Add")
+                .build();
+
+        User user2 = User.builder()
+                .id(2)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .addressList(new ArrayList<>())
+                .library(new ArrayList<>())
+                .offeredBooks(new ArrayList<>())
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
+                .wishlist(new ArrayList<>())
                 .mainAddress("Add")
                 .build();
 
@@ -320,17 +335,24 @@ public class UserServiceTest {
                 .genre(BookGenre.ART)
                 .isbn("101")
                 .usersOfferingForExchange(new ArrayList<>())
+                .usersHaveInWishlist(new ArrayList<>())
                 .publicationYear(Year.of(2010))
                 .build();
 
         when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findById(2)).thenReturn(user2);
         when(bookService.getBookById(1)).thenReturn(testBook1);
         when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
         when(oauth2User.getName()).thenReturn("min0@list.ru");
         when(authentication.getPrincipal()).thenReturn(oauth2User);
         when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(mailBuilder.buildAvailableFromWishlistMessage(anyString(), anyString(), anyString(), anyString()))
+                .thenReturn(new EmailData("min095@list.ru", "Subject", "Message"));
         SecurityContextHolder.setContext(securityContext);
 
+        testBook1.getUsersHaveInWishlist().add(user2);
+
+        userService.addBookToWishlist(2, 1);
         userService.addBookToUserLibrary(1, 1);
         userService.addBookToOfferedByUser(1, 1);
 
@@ -338,6 +360,7 @@ public class UserServiceTest {
 
         assertNotNull(updatedUser);
         assertEquals(1, updatedUser.getOfferedBooks().size());
+        verify(emailService, times(1)).sendEmail(any(EmailData.class));
     }
 
     @Test
@@ -350,6 +373,8 @@ public class UserServiceTest {
                 .gender(UserGender.MALE)
                 .library(new ArrayList<>())
                 .offeredBooks(new ArrayList<>())
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
                 .build();
 
         Book testBook1 = Book.builder()
@@ -360,6 +385,7 @@ public class UserServiceTest {
                 .genre(BookGenre.ART)
                 .isbn("101")
                 .usersOfferingForExchange(new ArrayList<>())
+                .usersHaveInWishlist(new ArrayList<>())
                 .publicationYear(Year.of(2010))
                 .build();
 
@@ -476,6 +502,8 @@ public class UserServiceTest {
                 .addressList(new ArrayList<>())
                 .library(new ArrayList<>())
                 .offeredBooks(new ArrayList<>())
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
                 .build();
 
         Book testBook = Book.builder()
@@ -485,6 +513,7 @@ public class UserServiceTest {
                 .description("Test description")
                 .genre(BookGenre.ART)
                 .isbn("101")
+                .usersHaveInWishlist(new ArrayList<>())
                 .publicationYear(Year.of(2010))
                 .build();
 
@@ -1036,5 +1065,152 @@ public class UserServiceTest {
         assertNotNull(updatedUser2);
         assertEquals(UserRole.ROLE_USER, updatedUser.getRole());
         assertEquals(UserRole.ROLE_USER, updatedUser2.getRole());
+    }
+
+    @Test
+    public void testUnblockUserAsAdmin() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .showContacts(false)
+                .build();
+
+        User user2 = User.builder()
+                .id(2)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_BLOCKED)
+                .gender(UserGender.MALE)
+                .showContacts(true)
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(userRepository.findById(2)).thenReturn(user2);
+
+        userService.unblockUserAsAdmin(1);
+        userService.unblockUserAsAdmin(2);
+
+        User updatedUser = userService.getUserById(1);
+        User updatedUser2 = userService.getUserById(2);
+        assertNotNull(updatedUser);
+        assertNotNull(updatedUser2);
+        assertEquals(UserRole.ROLE_USER, updatedUser.getRole());
+        assertEquals(UserRole.ROLE_ADMIN, updatedUser2.getRole());
+    }
+
+    @Test
+    public void testAddBookToWishlist() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .addressList(new ArrayList<>())
+                .library(new ArrayList<>())
+                .offeredBooks(new ArrayList<>())
+                .wishlist(new ArrayList<>())
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
+                .build();
+
+        Book testBook = Book.builder()
+                .id(1)
+                .title("Test Book 4")
+                .author("Test Author 4")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .usersHaveInWishlist(new ArrayList<>())
+                .publicationYear(Year.of(2010))
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(bookService.getBookById(1)).thenReturn(testBook);
+
+        userService.addBookToWishlist(1, 1);
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        assertEquals(1, updatedUser.getWishlist().size());
+    }
+
+    @Test
+    public void testAddBookInLibraryToWishlist() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .addressList(new ArrayList<>())
+                .library(new ArrayList<>())
+                .offeredBooks(new ArrayList<>())
+                .wishlist(new ArrayList<>())
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
+                .build();
+
+        Book testBook = Book.builder()
+                .id(1)
+                .title("Test Book 4")
+                .author("Test Author 4")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .usersHaveInWishlist(new ArrayList<>())
+                .publicationYear(Year.of(2010))
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(bookService.getBookById(1)).thenReturn(testBook);
+
+        userService.addBookToUserLibrary(1, 1);
+        userService.addBookToWishlist(1, 1);
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        assertEquals(0, updatedUser.getWishlist().size());
+    }
+
+    @Test
+    public void testRemoveBookFromWishlist() {
+        User user = User.builder()
+                .id(1)
+                .email("min0@list.ru")
+                .username("us")
+                .role(UserRole.ROLE_USER)
+                .gender(UserGender.MALE)
+                .addressList(new ArrayList<>())
+                .library(new ArrayList<>())
+                .offeredBooks(new ArrayList<>())
+                .wishlist(new ArrayList<>())
+                .exchangesAsMember1(new ArrayList<>())
+                .exchangesAsMember2(new ArrayList<>())
+                .build();
+
+        Book testBook = Book.builder()
+                .id(1)
+                .title("Test Book 4")
+                .author("Test Author 4")
+                .description("Test description")
+                .genre(BookGenre.ART)
+                .isbn("101")
+                .usersHaveInWishlist(new ArrayList<>())
+                .publicationYear(Year.of(2010))
+                .build();
+
+        when(userRepository.findById(1)).thenReturn(user);
+        when(bookService.getBookById(1)).thenReturn(testBook);
+
+        userService.addBookToWishlist(1, 1);
+        userService.removeBookFromWishlist(1, 1);
+
+        User updatedUser = userService.getUserById(1);
+        assertNotNull(updatedUser);
+        assertEquals(0, updatedUser.getWishlist().size());
     }
 }

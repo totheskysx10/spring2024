@@ -80,6 +80,19 @@ public class User {
     private List<Book> offeredBooks;
 
     /**
+     * Книги, которые пользователь хотел бы получить в результате обмена, когда они будут доступны.
+     */
+    @ManyToMany(fetch = FetchType.EAGER)
+    @JoinTable(
+            name = "user_wishlist",
+            joinColumns = @JoinColumn(name = "user_id"),
+            inverseJoinColumns = @JoinColumn(name = "book_id")
+    )
+    @Getter
+    private List<Book> wishlist;
+
+
+    /**
      * Список адресов проживания пользователя, куда можно доставлять книги при обмене.
      */
     @ElementCollection(fetch = FetchType.EAGER)
@@ -183,8 +196,8 @@ public class User {
     public String getMainAddress(long userId) {
         if (emailEqualsWithAuth() || usersWithAccessToMainAddress.contains(userId))
             return mainAddress;
-
-        return null;
+        else
+            return null;
     }
 
     /**

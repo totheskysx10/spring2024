@@ -85,14 +85,14 @@ public class ExchangeService {
             log.info("Обмену {} присвоен трек-номер участника 1", exchange.getId());
 
             EmailData emailData = mailBuilder.buildUpdateTrackMessage(exchange.getMember2().getEmail(), exchange.getId(), track);
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
         }
         else if (exchange.getMember2().getId() == userId) {
             exchange.setTrack2(track);
             log.info("Обмену {} присвоен трек-номер участника 2", exchange.getId());
 
             EmailData emailData = mailBuilder.buildUpdateTrackMessage(exchange.getMember1().getEmail(), exchange.getId(), track);
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
         }
 
         exchangeRepository.save(exchange);
@@ -100,7 +100,6 @@ public class ExchangeService {
             checkAndSetInProgressStatus(exchangeId);
 
         exchangeRepository.save(exchange);
-        Exchange a = exchange;
     }
 
     /**
@@ -118,14 +117,14 @@ public class ExchangeService {
             log.info("Обмен {} доставляется без трек-номера участника 1", exchange.getId());
 
             EmailData emailData = mailBuilder.buildNoTrackMessage(exchange.getMember2().getEmail(), exchange.getId());
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
         }
         else if (exchange.getMember2().getId() == userId) {
             exchange.setTrack2(noTrack);
             log.info("Обмен {} доставляется без трек-номера участника 2", exchange.getId());
 
             EmailData emailData = mailBuilder.buildNoTrackMessage(exchange.getMember1().getEmail(), exchange.getId());
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
         }
 
         exchangeRepository.save(exchange);
@@ -149,10 +148,10 @@ public class ExchangeService {
             log.info("Статус обмена {}: в процессе доставки", exchange.getId());
 
             EmailData emailData1 = mailBuilder.buildSetInProgressStatusMessage(exchange.getMember1().getEmail(), exchange.getId());
-            emailService.sendEmail(emailData1.getEmailReceiver(), emailData1.getEmailSubject(), emailData1.getEmailMessage());
+            emailService.sendEmail(emailData1);
 
             EmailData emailData2 = mailBuilder.buildSetInProgressStatusMessage(exchange.getMember2().getEmail(), exchange.getId());
-            emailService.sendEmail(emailData2.getEmailReceiver(), emailData2.getEmailSubject(), emailData2.getEmailMessage());
+            emailService.sendEmail(emailData2);
         }
     }
 
@@ -181,14 +180,14 @@ public class ExchangeService {
             log.info("Участник 1 получил книгу");
 
             EmailData emailData = mailBuilder.buildReceiveBookMessage(exchange.getMember2().getEmail(), exchange.getId());
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
         }
         else if (exchange.getMember2().getId() == userId) {
             exchange.setReceived2(true);
             log.info("Участник 2 получил книгу");
 
             EmailData emailData = mailBuilder.buildReceiveBookMessage(exchange.getMember1().getEmail(), exchange.getId());
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
         }
 
         exchangeRepository.save(exchange);
@@ -198,6 +197,7 @@ public class ExchangeService {
 
     /**
      * Завершает обмен и обновляет библиотеки пользователей при успешной доставке книг.
+     * Удаляет из списка желаний пользователей книги, которые они хотели получить и получили в результате обмена.
      *
      * @param exchangeId Идентификатор обмена.
      */
@@ -211,6 +211,9 @@ public class ExchangeService {
         exchange.setStatus(ExchangeStatus.COMPLETED);
         exchangeRepository.save(exchange);
 
+        userService.removeBookFromWishlist(member2Id, exchangedBook1Id);
+        userService.removeBookFromWishlist(member1Id, exchangedBook2Id);
+
         userService.removeBookFromUserLibrary(member1Id, exchangedBook1Id);
         userService.removeBookFromUserLibrary(member2Id, exchangedBook2Id);
         userService.addBookToUserLibrary(member2Id, exchangedBook1Id);
@@ -222,10 +225,10 @@ public class ExchangeService {
         log.info("Обмен {} успешно завершён, библиотеки пользователей обновлены", exchange.getId());
 
         EmailData emailData1 = mailBuilder.buildFinalizeExchangeMessage(exchange.getMember1().getEmail(), exchange.getId());
-        emailService.sendEmail(emailData1.getEmailReceiver(), emailData1.getEmailSubject(), emailData1.getEmailMessage());
+        emailService.sendEmail(emailData1);
 
         EmailData emailData2 = mailBuilder.buildFinalizeExchangeMessage(exchange.getMember2().getEmail(), exchange.getId());
-        emailService.sendEmail(emailData2.getEmailReceiver(), emailData2.getEmailSubject(), emailData2.getEmailMessage());
+        emailService.sendEmail(emailData2);
     }
 
     /**
@@ -261,10 +264,10 @@ public class ExchangeService {
             User user2 = userService.getUserById(exchange.getMember2().getId());
 
             EmailData emailData1 = mailBuilder.buildProblemsMessage(exchange.getMember1().getEmail(), exchange.getId(), user2);
-            emailService.sendEmail(emailData1.getEmailReceiver(), emailData1.getEmailSubject(), emailData1.getEmailMessage());
+            emailService.sendEmail(emailData1);
 
             EmailData emailData2 = mailBuilder.buildProblemsMessage(exchange.getMember2().getEmail(), exchange.getId(), user1);
-            emailService.sendEmail(emailData2.getEmailReceiver(), emailData2.getEmailSubject(), emailData2.getEmailMessage());
+            emailService.sendEmail(emailData2);
 
             if (enableShow1)
                 userService.disableShowContacts(exchange.getMember1().getId());
@@ -292,10 +295,10 @@ public class ExchangeService {
         log.info("Обмен {} отменён админом", exchange.getId());
 
         EmailData emailData1 = mailBuilder.buildCancelMessage(exchange.getMember1().getEmail(), exchange.getId());
-        emailService.sendEmail(emailData1.getEmailReceiver(), emailData1.getEmailSubject(), emailData1.getEmailMessage());
+        emailService.sendEmail(emailData1);
 
         EmailData emailData2 = mailBuilder.buildCancelMessage(exchange.getMember2().getEmail(), exchange.getId());
-        emailService.sendEmail(emailData2.getEmailReceiver(), emailData2.getEmailSubject(), emailData2.getEmailMessage());
+        emailService.sendEmail(emailData2);
 
     }
 }

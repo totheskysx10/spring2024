@@ -48,13 +48,13 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{userId}/offeredBooks/{bookId}")
+    @PutMapping("/{userId}/offered-books/{bookId}")
     public ResponseEntity<Void> addBookToOfferedByUser(@PathVariable long userId, @PathVariable long bookId) {
         userService.addBookToOfferedByUser(userId, bookId);
         return ResponseEntity.ok().build();
     }
 
-    @DeleteMapping("/{userId}/offeredBooks/{bookId}")
+    @DeleteMapping("/{userId}/offered-books/{bookId}")
     public ResponseEntity<Void> removeBookFromOfferedByUser(@PathVariable long userId, @PathVariable long bookId) {
         userService.removeBookFromOfferedByUser(userId, bookId);
         return ResponseEntity.ok().build();
@@ -78,7 +78,7 @@ public class UserController {
         return ResponseEntity.ok().build();
     }
 
-    @PutMapping("/{userId}/mainAddress/{index}")
+    @PutMapping("/{userId}/main-address/{index}")
     public ResponseEntity<Void> updateMainAddress(@PathVariable long userId, @PathVariable int index) {
         userService.updateMainAddress(userId, index);
         return ResponseEntity.ok().build();
@@ -129,6 +129,18 @@ public class UserController {
     @PutMapping("/unblock/{userId}")
     public ResponseEntity<Void> unblockUser(@PathVariable long userId) {
         userService.unblockUser(userId);
+        return ResponseEntity.ok().build();
+    }
+
+    @PutMapping("/{userId}/wishlist/{bookId}")
+    public ResponseEntity<Void> addBookToWishlist(@PathVariable long userId, @PathVariable long bookId) {
+        userService.addBookToWishlist(userId, bookId);
+        return ResponseEntity.ok().build();
+    }
+
+    @DeleteMapping("/{userId}/wishlist/{bookId}")
+    public ResponseEntity<Void> removeBookFromWishlist(@PathVariable long userId, @PathVariable long bookId) {
+        userService.removeBookFromWishlist(userId, bookId);
         return ResponseEntity.ok().build();
     }
 }

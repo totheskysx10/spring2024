@@ -51,7 +51,7 @@ public class ComplaintService {
         String finalStringComplaintSubject = stringComplaintSubject;
         adminList.forEach(admin -> {
             EmailData emailData = mailBuilder.buildSendComplaintMessage(admin.getEmail(), subjectId, finalStringComplaintSubject, complaint);
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
         });
     }
 }

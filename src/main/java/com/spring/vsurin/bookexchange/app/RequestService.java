@@ -54,7 +54,7 @@ public class RequestService {
             log.info("Создана заявка с id {}", request.getId());
 
             EmailData emailData = mailBuilder.buildCreateRequestMessage(request.getReceiver().getEmail(), request.getId(), request.getBookSenderWants());
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
             return request;
         } catch (Exception e) {
             throw new RuntimeException("Ошибка при создании заявки", e);
@@ -109,6 +109,8 @@ public class RequestService {
             userService.addUserWithAccessToMainAddress(sender.getId(), receiver.getId());
             userService.addUserWithAccessToMainAddress(receiver.getId(), sender.getId());
 
+            Long currentAuthId = userService.getCurrentAuthId();
+
             for (Request relatedRequest : relatedRequests) {
                 if (relatedRequest.getId() == requestId) {
                     relatedRequest.setStatus(RequestStatus.ACCEPTED);
@@ -119,14 +121,14 @@ public class RequestService {
                             .member2(relatedRequest.getReceiver())
                             .exchangedBook1(relatedRequest.getBookReceiverWants())
                             .exchangedBook2(relatedRequest.getBookSenderWants())
-                            .address1(relatedRequest.getSender().getMainAddress(userService.getCurrentAuthId()))
-                            .address2(relatedRequest.getReceiver().getMainAddress(userService.getCurrentAuthId()))
+                            .address1(relatedRequest.getSender().getMainAddress(currentAuthId))
+                            .address2(relatedRequest.getReceiver().getMainAddress(currentAuthId))
                             .build();
                     exchangeService.createExchange(exchange);
                     log.info("Заявка с id {} принята, создан обмен", requestId);
 
                     EmailData emailData = mailBuilder.buildAcceptRequestMessage(relatedRequest.getSender().getEmail(), relatedRequest);
-                    emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+                    emailService.sendEmail(emailData);
                 } else {
                     rejectRequest(relatedRequest.getId());
                     log.info("Заявка с id {} отклонена, так как с запрашиваемой книгой принята к обмену другая заявка", relatedRequest.getId());
@@ -149,7 +151,7 @@ public class RequestService {
             log.info("Заявка с id {} отклонена", requestId);
 
             EmailData emailData = mailBuilder.buildRejectRequestMessage(request.getSender().getEmail(), request.getId());
-            emailService.sendEmail(emailData.getEmailReceiver(), emailData.getEmailSubject(), emailData.getEmailMessage());
+            emailService.sendEmail(emailData);
         }
     }
 

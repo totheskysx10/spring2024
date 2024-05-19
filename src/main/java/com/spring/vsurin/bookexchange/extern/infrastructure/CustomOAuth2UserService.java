@@ -111,6 +111,7 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
                 .showContacts(false)
                 .avatarLink(avatarLink)
                 .usersWithAccessToMainAddress(new ArrayList<>())
+                .wishlist(new ArrayList<>())
                 .build();
 
         return newUser;
@@ -138,16 +139,10 @@ public class CustomOAuth2UserService extends DefaultOAuth2UserService {
     }
 
     private UserGender getConstantGenderValue(String gender) {
-        UserGender genderValue;
-
-        if ("female".equals(gender)) {
-            genderValue = UserGender.FEMALE;
-        } else if ("male".equals(gender)) {
-            genderValue = UserGender.MALE;
-        } else {
-            genderValue = null;
-        }
-
-        return genderValue;
+        return switch(gender) {
+            case "female" -> UserGender.FEMALE;
+            case "male" -> UserGender.MALE;
+            default -> null;
+        };
     }
 }

@@ -37,7 +37,7 @@ public class SecurityConfig {
                 .authorizeHttpRequests((authorize) -> authorize
                         .requestMatchers("/users/delete/**", "/books/delete/**", "/users/admin/**", "/users/no-admin/**", "/users/block/**", "/users/unblock/**", "/exchanges/cancel/**")
                         .hasAuthority("ROLE_ADMIN")
-                        .requestMatchers("/users/{userId}/addresses", "/users/{userId}/mainAddress/**", "/users/enable-show-contacts/{userId}", "/users/disable-show-contacts/{userId}", "/users/{userId}/preferences")
+                        .requestMatchers("/users/{userId}/addresses", "/users/{userId}/main-address/**", "/users/enable-show-contacts/{userId}", "/users/disable-show-contacts/{userId}", "/users/{userId}/preferences", "/users/{userId}/wishlist/**", "/users/{userId}/library/**", "/users/{userId}/offered-books/**")
                         .access((authentication, context) -> {
                             long userId = Long.parseLong(context.getVariables().get("userId"));
                             return new AuthorizationDecision(webSecurityConditions.isCurrentUser(userId));

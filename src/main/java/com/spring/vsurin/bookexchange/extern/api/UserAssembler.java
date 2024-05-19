@@ -50,6 +50,9 @@ public class UserAssembler extends RepresentationModelAssemblerSupport<User, Use
         userDTO.setAvatarLink(user.getAvatarLink());
         userDTO.setPreferences(user.getPreferences());
         userDTO.setUsersWithAccessToMainAddress(user.getUsersWithAccessToMainAddress());
+        userDTO.setWishlistIds(user.getWishlist().stream()
+                .map(Book::getId)
+                .collect(Collectors.toList()));
 
         userDTO.add(linkTo(methodOn(UserController.class).getUserById(user.getId())).withSelfRel());
 

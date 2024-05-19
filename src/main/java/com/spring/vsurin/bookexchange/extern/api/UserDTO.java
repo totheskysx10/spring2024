@@ -27,6 +27,8 @@ public class UserDTO extends RepresentationModel<UserDTO> {
 
     private List<Long> offeredBookIds;
 
+    private List<Long> wishlistIds;
+
     private List<String> addressList;
 
     @Pattern(regexp = "^\\+[0-9]{1,3}[0-9]{0,10}$")

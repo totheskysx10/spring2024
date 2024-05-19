@@ -131,4 +131,15 @@ public interface MailBuilder {
      * @return Объект EmailData, представляющий электронное сообщение.
      */
     EmailData buildCancelMessage(String receiver, long exchangeId);
+
+    /**
+     * Создаёт сообщение о доступности к обмену книги из списка желаний.
+     *
+     * @param receiver      Адрес электронной почты получателя.
+     * @param title    Название книги.
+     * @param author    Автор книги.
+     * @param name    Пользователь, предлагающий для обмена.
+     * @return Объект EmailData, представляющий электронное сообщение.
+     */
+    EmailData buildAvailableFromWishlistMessage(String receiver, String title, String author, String name);
 }

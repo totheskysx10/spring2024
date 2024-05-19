@@ -36,6 +36,9 @@ public class BookAssembler extends RepresentationModelAssemblerSupport<Book, Boo
         bookDTO.setDescription(book.getDescription());
         bookDTO.setMarks(book.getMarks());
         bookDTO.setRating(book.getRating());
+        bookDTO.setUserIdsHaveInWishlist(book.getUsersHaveInWishlist().stream()
+                .map(User::getId)
+                .collect(Collectors.toList()));
 
         bookDTO.add(linkTo(methodOn(BookController.class).getBookCover(book.getId())).withRel("book_cover"));
         bookDTO.add(linkTo(methodOn(BookController.class).getBookById(book.getId())).withSelfRel());

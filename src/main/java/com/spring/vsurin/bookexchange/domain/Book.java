@@ -95,6 +95,13 @@ public class Book {
     private List<User> usersOfferingForExchange;
 
     /**
+     * Пользователи, имеющие эту книгу в списке желаний.
+     */
+    @ManyToMany(mappedBy = "wishlist", fetch = FetchType.EAGER)
+    @Getter
+    private List<User> usersHaveInWishlist;
+
+    /**
      * Рейтинг книги.
      */
     @ElementCollection(fetch = FetchType.EAGER)

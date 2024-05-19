@@ -10,6 +10,7 @@ INSERT INTO books (book_id, book_title, book_author, book_genre, book_isbn, book
 INSERT INTO user_books (user_id, book_id) VALUES (1, 1);
 INSERT INTO user_books (user_id, book_id) VALUES (2, 2);
 INSERT INTO user_books (user_id, book_id) VALUES (2, 3);
+INSERT INTO user_wishlist (user_id, book_id) VALUES (1, 2);
 
 INSERT INTO user_offered_books (user_id, book_id) VALUES (1, 1);
 INSERT INTO user_offered_books (user_id, book_id) VALUES (2, 2);

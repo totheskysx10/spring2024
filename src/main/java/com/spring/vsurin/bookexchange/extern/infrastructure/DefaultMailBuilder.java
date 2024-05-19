@@ -109,4 +109,12 @@ public class DefaultMailBuilder implements MailBuilder {
 
         return new EmailData(receiver, emailSubject, emailMessage);
     }
+
+    public EmailData buildAvailableFromWishlistMessage(String receiver, String title, String author, String name) {
+        String emailSubject = "BookExchange - Книга из списка желаний доступна для обмена";
+
+        String emailMessage = "Книга " + author + " - " + title + " из вашего списка желаний доступна для обмена. Её предлагает пользователь " + name + ".";
+
+        return new EmailData(receiver, emailSubject, emailMessage);
+    }
 }

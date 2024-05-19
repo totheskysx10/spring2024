@@ -1,5 +1,6 @@
 package com.spring.vsurin.bookexchange;
 
+import com.spring.vsurin.bookexchange.domain.EmailData;
 import com.spring.vsurin.bookexchange.extern.infrastructure.DefaultEmailService;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -27,7 +28,7 @@ public class EmailServiceTest {
         String subject = "Test Subject";
         String message = "Test Message";
 
-        emailService.sendEmail(address, subject, message);
+        emailService.sendEmail(new EmailData(address, subject, message));
 
         verify(javaMailSender).send(any(SimpleMailMessage.class));
     }

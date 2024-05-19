@@ -41,6 +41,8 @@ public class BookDTO extends RepresentationModel<BookDTO> {
 
     private List<Long> userIdsOfferingForExchange;
 
+    private List<Long> userIdsHaveInWishlist;
+
     private Iterable<Integer> marks;
 
     @Min(0)

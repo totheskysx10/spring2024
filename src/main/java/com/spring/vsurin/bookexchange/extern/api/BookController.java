@@ -40,6 +40,7 @@ public class BookController {
                 .owners(new ArrayList<>())
                 .usersOfferingForExchange(new ArrayList<>())
                 .marks((List<Integer>) bookDTO.getMarks())
+                .usersHaveInWishlist(new ArrayList<>())
                 .rating(bookDTO.getRating())
                 .build();
 

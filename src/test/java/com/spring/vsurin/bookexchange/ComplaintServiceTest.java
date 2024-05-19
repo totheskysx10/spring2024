@@ -69,6 +69,6 @@ public class ComplaintServiceTest {
 
         complaintService.sendComplaint(ComplaintSubject.BOOK, 10, anyString());
 
-        verify(emailService, times(2)).sendEmail(eq("min095@list.ru"), anyString(), anyString());
+        verify(emailService, times(2)).sendEmail(any(EmailData.class));
     }
 }

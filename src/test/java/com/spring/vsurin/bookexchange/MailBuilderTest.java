@@ -202,5 +202,19 @@ public class MailBuilderTest {
         assertEquals("Обмен книгами №555 отменён администратором приложения. Для уточнения подробностей свяжитесь с поддержкой.", emailData.getEmailMessage());
         assertEquals("recipient@example.com", emailData.getEmailReceiver());
     }
+
+    @Test
+    public void testBuildAvailableFromWishlistMessage() {
+        String receiver = "recipient@example.com";
+        String author = "Author";
+        String title = "Title";
+        String name = "Username";
+
+        EmailData emailData = mailBuilder.buildAvailableFromWishlistMessage(receiver, title, author, name);
+
+        assertEquals("BookExchange - Книга из списка желаний доступна для обмена", emailData.getEmailSubject());
+        assertEquals("Книга Author - Title из вашего списка желаний доступна для обмена. Её предлагает пользователь Username.", emailData.getEmailMessage());
+        assertEquals("recipient@example.com", emailData.getEmailReceiver());
+    }
 }
 

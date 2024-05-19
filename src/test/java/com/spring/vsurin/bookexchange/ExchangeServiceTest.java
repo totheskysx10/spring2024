@@ -4,6 +4,7 @@ import com.spring.vsurin.bookexchange.app.EmailService;
 import com.spring.vsurin.bookexchange.app.ExchangeRepository;
 import com.spring.vsurin.bookexchange.app.ExchangeService;
 import com.spring.vsurin.bookexchange.app.UserService;
+import com.spring.vsurin.bookexchange.domain.EmailData;
 import com.spring.vsurin.bookexchange.domain.Exchange;
 import com.spring.vsurin.bookexchange.domain.ExchangeStatus;
 import com.spring.vsurin.bookexchange.domain.User;
@@ -17,6 +18,7 @@ import java.time.LocalDate;
 import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
+import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.times;
 import static org.mockito.Mockito.verify;
@@ -59,7 +61,7 @@ public class ExchangeServiceTest {
         exchangeService.updateTrackSetByUser(1, 1, "123");
         exchangeService.updateTrackSetByUser(2, 1, "1234");
         Exchange updEx = exchangeService.getExchangeById(1);
-        verify(emailService, times(4)).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService, times(4)).sendEmail(any(EmailData.class));
 
         assertEquals("123", updEx.getTrack1());
         assertEquals("1234", updEx.getTrack2());
@@ -71,7 +73,7 @@ public class ExchangeServiceTest {
         exchangeService.setNoTrack(1, 1);
         exchangeService.setNoTrack(2, 1);
         Exchange updEx = exchangeService.getExchangeById(1);
-        verify(emailService, times(4)).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService, times(4)).sendEmail(any(EmailData.class));
 
         assertEquals("DELIVERY_WITHOUT_TRACK", updEx.getTrack1());
         assertEquals("DELIVERY_WITHOUT_TRACK", updEx.getTrack2());
@@ -94,6 +96,9 @@ public class ExchangeServiceTest {
     @Sql("/with_exchanges.sql")
     @Test
     public void testReceiveBooks() {
+        User user = userService.getUserById(1);
+        assertEquals(1, user.getWishlist().size());
+
         exchangeService.setNoTrack(1, 1);
         exchangeService.setNoTrack(2, 1);
 
@@ -103,11 +108,12 @@ public class ExchangeServiceTest {
         User updatedUser = userService.getUserById(1);
         User updatedUser2 = userService.getUserById(2);
 
-        verify(emailService, times(8)).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService, times(8)).sendEmail(any(EmailData.class));
 
         assertEquals(ExchangeStatus.COMPLETED, exchangeService.getExchangeById(1).getStatus());
         assertEquals(2, updatedUser.getLibrary().get(0).getId());
         assertEquals(1, updatedUser2.getLibrary().get(1).getId());
+        assertEquals(0, updatedUser.getWishlist().size());
     }
 
     @Sql("/with_exchanges.sql")
@@ -118,7 +124,7 @@ public class ExchangeServiceTest {
         exchangeRepository.save(ex);
         exchangeService.setNoTrack(1, 1);
         exchangeService.setNoTrack(2, 1);
-        verify(emailService, times(4)).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService, times(4)).sendEmail(any(EmailData.class));
 
         assertThrows(IllegalStateException.class, () -> {
             exchangeService.setProblemsStatus(1);
@@ -134,7 +140,7 @@ public class ExchangeServiceTest {
         exchangeService.setNoTrack(1, 1);
         exchangeService.setNoTrack(2, 1);
         exchangeService.setProblemsStatus(ex.getId());
-        verify(emailService, times(6)).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService, times(6)).sendEmail(any(EmailData.class));
 
         assertEquals(ExchangeStatus.PROBLEMS, exchangeService.getExchangeById(ex.getId()).getStatus());
     }
@@ -147,7 +153,7 @@ public class ExchangeServiceTest {
         exchangeService.setNoTrack(1, 1);
         exchangeService.setNoTrack(2, 1);
         exchangeService.cancelExchange(ex.getId());
-        verify(emailService, times(6)).sendEmail(anyString(), anyString(), anyString());
+        verify(emailService, times(6)).sendEmail(any(EmailData.class));
 
         assertEquals(ExchangeStatus.CANCELLED_BY_ADMIN, exchangeService.getExchangeById(ex.getId()).getStatus());
     }

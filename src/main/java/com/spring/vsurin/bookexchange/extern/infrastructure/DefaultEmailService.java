@@ -1,6 +1,7 @@
 package com.spring.vsurin.bookexchange.extern.infrastructure;
 
 import com.spring.vsurin.bookexchange.app.EmailService;
+import com.spring.vsurin.bookexchange.domain.EmailData;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.mail.MailException;
 import org.springframework.mail.SimpleMailMessage;
@@ -18,13 +19,13 @@ public class DefaultEmailService implements EmailService {
         this.javaMailSender = javaMailSender;
     }
 
-    public void sendEmail(String address, String subject, String message) {
+    public void sendEmail(EmailData emailData) {
         try {
             SimpleMailMessage simpleMailMessage = new SimpleMailMessage();
             simpleMailMessage.setFrom(emailFrom);
-            simpleMailMessage.setTo(address);
-            simpleMailMessage.setSubject(subject);
-            simpleMailMessage.setText(message);
+            simpleMailMessage.setTo(emailData.getEmailReceiver());
+            simpleMailMessage.setSubject(emailData.getEmailSubject());
+            simpleMailMessage.setText(emailData.getEmailMessage());
             javaMailSender.send(simpleMailMessage);
         } catch (MailException e) {
             e.printStackTrace();

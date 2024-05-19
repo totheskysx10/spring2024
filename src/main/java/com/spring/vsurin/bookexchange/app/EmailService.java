@@ -1,5 +1,7 @@
 package com.spring.vsurin.bookexchange.app;
 
+import com.spring.vsurin.bookexchange.domain.EmailData;
+
 /**
  * Интерфейс для отправки электронной почты.
  */
@@ -8,9 +10,7 @@ public interface EmailService {
     /**
      * Отправляет электронное письмо на указанный адрес с заданной темой и сообщением.
      *
-     * @param address адрес электронной почты получателя
-     * @param subject тема письма
-     * @param message содержание письма
+     * @param emailData данные для отправки сообщения
      */
-    void sendEmail(String address, String subject, String message);
+    void sendEmail(EmailData emailData);
 }
