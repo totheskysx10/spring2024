@@ -1,6 +1,6 @@
 package com.spring.vsurin.bookexchange.extern.infrastructure;
 
-import com.spring.vsurin.bookexchange.app.UserService;
+import com.spring.vsurin.bookexchange.app.SecurityContextService;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
@@ -11,10 +11,10 @@ import org.springframework.stereotype.Component;
 @Component
 public class WebSecurityConditions  {
 
-    private final UserService userService;
+    private final SecurityContextService securityContextService;
 
-    public WebSecurityConditions( UserService userService) {
-        this.userService = userService;
+    public WebSecurityConditions(SecurityContextService securityContextService) {
+        this.securityContextService = securityContextService;
     }
 
     /**
@@ -24,6 +24,6 @@ public class WebSecurityConditions  {
      * @return true, если текущий пользователь аутентифицирован и его идентификатор совпадает с указанным userId; false в противном случае
      */
     public boolean isCurrentUser(long userId) {
-        return userService.getCurrentAuthId() == userId;
+        return securityContextService.getCurrentAuthId() == userId;
     }
 }

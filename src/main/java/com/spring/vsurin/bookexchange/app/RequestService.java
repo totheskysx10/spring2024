@@ -20,14 +20,16 @@ public class RequestService {
     private final BookService bookService;
     private final MailBuilder mailBuilder;
     private final EmailService emailService;
+    private final SecurityContextService securityContextService;
 
-    public RequestService(RequestRepository requestRepository, ExchangeService exchangeService, UserService userService, BookService bookService, MailBuilder mailBuilder, EmailService emailService) {
+    public RequestService(RequestRepository requestRepository, ExchangeService exchangeService, UserService userService, BookService bookService, MailBuilder mailBuilder, EmailService emailService, SecurityContextService securityContextService) {
         this.requestRepository = requestRepository;
         this.exchangeService = exchangeService;
         this.userService = userService;
         this.bookService = bookService;
         this.mailBuilder = mailBuilder;
         this.emailService = emailService;
+        this.securityContextService = securityContextService;
     }
 
     /**
@@ -109,7 +111,7 @@ public class RequestService {
             userService.addUserWithAccessToMainAddress(sender.getId(), receiver.getId());
             userService.addUserWithAccessToMainAddress(receiver.getId(), sender.getId());
 
-            Long currentAuthId = userService.getCurrentAuthId();
+            Long currentAuthId = securityContextService.getCurrentAuthId();
 
             for (Request relatedRequest : relatedRequests) {
                 if (relatedRequest.getId() == requestId) {

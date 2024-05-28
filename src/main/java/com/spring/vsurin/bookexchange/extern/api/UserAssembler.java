@@ -1,6 +1,6 @@
 package com.spring.vsurin.bookexchange.extern.api;
 
-import com.spring.vsurin.bookexchange.app.UserService;
+import com.spring.vsurin.bookexchange.app.SecurityContextService;
 import com.spring.vsurin.bookexchange.domain.Book;
 import com.spring.vsurin.bookexchange.domain.Exchange;
 import com.spring.vsurin.bookexchange.domain.User;
@@ -15,11 +15,11 @@ import static org.springframework.hateoas.server.mvc.WebMvcLinkBuilder.methodOn;
 @Component
 public class UserAssembler extends RepresentationModelAssemblerSupport<User, UserDTO> {
 
-    private final UserService userService;
+    private final SecurityContextService securityContextService;
 
-    public UserAssembler(UserService userService) {
+    public UserAssembler(SecurityContextService securityContextService) {
         super(UserController.class, UserDTO.class);
-        this.userService = userService;
+        this.securityContextService = securityContextService;
     }
 
     @Override
@@ -44,7 +44,7 @@ public class UserAssembler extends RepresentationModelAssemblerSupport<User, Use
         userDTO.setExchangesIdsAsMember2(user.getExchangesAsMember2().stream()
                 .map(Exchange::getId)
                 .collect(Collectors.toList()));
-        userDTO.setMainAddress(user.getMainAddress(userService.getCurrentAuthId()));
+        userDTO.setMainAddress(user.getMainAddress(securityContextService.getCurrentAuthId()));
         userDTO.setRole(user.getRole());
         userDTO.setShowContacts(user.isShowContacts());
         userDTO.setAvatarLink(user.getAvatarLink());

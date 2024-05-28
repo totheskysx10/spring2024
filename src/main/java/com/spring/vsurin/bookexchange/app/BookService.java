@@ -21,9 +21,12 @@ public class BookService {
 
     private final UserRepository userRepository;
 
-    public BookService(BookRepository bookRepository, UserRepository userRepository) {
+    private final SecurityContextService securityContextService;
+
+    public BookService(BookRepository bookRepository, UserRepository userRepository, SecurityContextService securityContextService) {
         this.bookRepository = bookRepository;
         this.userRepository = userRepository;
+        this.securityContextService = securityContextService;
     }
 
     /**
@@ -125,8 +128,9 @@ public class BookService {
      * @param bookId идентификатор книги
      * @param mark   оценка, которую нужно добавить
      */
-    public void addMarkToBook(long bookId, int mark, long userId) {
+    public void addMarkToBook(long bookId, int mark) {
         Book book = getBookById(bookId);
+        long userId = securityContextService.getCurrentAuthId();
         User user = userRepository.findById(userId);
 
         if (user != null && book != null) {

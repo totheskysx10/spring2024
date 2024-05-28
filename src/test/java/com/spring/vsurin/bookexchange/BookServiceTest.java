@@ -26,6 +26,9 @@ public class BookServiceTest {
     @Mock
     private UserRepository userRepository;
 
+    @Mock
+    private SecurityContextService securityContextService;
+
     @InjectMocks
     private BookService bookService;
 
@@ -182,9 +185,10 @@ public class BookServiceTest {
 
         when(bookRepository.findById(1)).thenReturn(testBook);
         when(userRepository.findById(1)).thenReturn(testUser);
+        when(securityContextService.getCurrentAuthId()).thenReturn(testUser.getId());
 
-        bookService.addMarkToBook(1, 5, 1);
-        bookService.addMarkToBook(1, 7, 1);
+        bookService.addMarkToBook(1, 5);
+        bookService.addMarkToBook(1, 7);
 
         verify(bookRepository, times(2)).save(any(Book.class));
 
@@ -224,9 +228,10 @@ public class BookServiceTest {
 
         when(bookRepository.findById(1)).thenReturn(testBook);
         when(userRepository.findById(1)).thenReturn(testUser);
+        when(securityContextService.getCurrentAuthId()).thenReturn(testUser.getId());
 
-        bookService.addMarkToBook(1, 5, 1);
-        bookService.addMarkToBook(1, 7, 1);
+        bookService.addMarkToBook(1, 5);
+        bookService.addMarkToBook(1, 7);
 
         verify(bookRepository, times(0)).save(any(Book.class));
 

@@ -49,6 +49,9 @@ public class UserServiceTest {
     @Mock
     private SecurityContext securityContext;
 
+    @Mock
+    private SecurityContextService securityContextService;
+
     @Test
     public void testGetUserById() {
         User user = User.builder()
@@ -605,6 +608,7 @@ public class UserServiceTest {
         when(oauth2User.getName()).thenReturn("min0@list.ru");
         when(authentication.getPrincipal()).thenReturn(oauth2User);
         when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(securityContextService.getCurrentAuthId()).thenReturn(user.getId());
         SecurityContextHolder.setContext(securityContext);
 
         String address1 = "Test";
@@ -616,7 +620,7 @@ public class UserServiceTest {
 
         User updatedUser = userService.getUserById(1);
         assertNotNull(updatedUser);
-        assertEquals("Test2", updatedUser.getMainAddress(userService.getCurrentAuthId()));
+        assertEquals("Test2", updatedUser.getMainAddress(securityContextService.getCurrentAuthId()));
     }
 
     @Test
@@ -635,6 +639,7 @@ public class UserServiceTest {
         when(oauth2User.getName()).thenReturn("min0@list.ru");
         when(authentication.getPrincipal()).thenReturn(oauth2User);
         when(securityContext.getAuthentication()).thenReturn(authentication);
+        when(securityContextService.getCurrentAuthId()).thenReturn(user.getId());
         SecurityContextHolder.setContext(securityContext);
 
         String address1 = "Test";
@@ -646,7 +651,7 @@ public class UserServiceTest {
 
         User updatedUser = userService.getUserById(1);
         assertNotNull(updatedUser);
-        assertNull(updatedUser.getMainAddress(userService.getCurrentAuthId()));
+        assertNull(updatedUser.getMainAddress(securityContextService.getCurrentAuthId()));
     }
 
     @Test
@@ -902,30 +907,6 @@ public class UserServiceTest {
         User updatedUser = userService.getUserById(1);
         assertNotNull(updatedUser);
         assertEquals(updatedUser.getGender(), UserGender.FEMALE);
-    }
-
-    @Test
-    public void testGetCurrentAuthId() {
-        User user = User.builder()
-                .id(1)
-                .email("min0@list.ru")
-                .username("us")
-                .role(UserRole.ROLE_USER)
-                .gender(UserGender.MALE)
-                .showContacts(true)
-                .phoneNumber("+79123456789")
-                .avatarLink("Link")
-                .preferences("one")
-                .build();
-
-        when(userRepository.findByEmail("min0@list.ru")).thenReturn(user);
-        when(oauth2User.getName()).thenReturn("min0@list.ru");
-        when(authentication.getPrincipal()).thenReturn(oauth2User);
-        when(securityContext.getAuthentication()).thenReturn(authentication);
-        SecurityContextHolder.setContext(securityContext);
-
-        Long id = userService.getCurrentAuthId();
-        assertEquals(user.getId(), id);
     }
 
     @Test
